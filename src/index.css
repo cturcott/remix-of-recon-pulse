@@ -6,65 +6,65 @@
 
 @layer base {
   :root {
-    --background: 220 20% 97%;
-    --foreground: 220 25% 10%;
+    --background: 210 20% 98%;
+    --foreground: 220 20% 14%;
 
     --card: 0 0% 100%;
-    --card-foreground: 220 25% 10%;
+    --card-foreground: 220 20% 14%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 25% 10%;
+    --popover-foreground: 220 20% 14%;
 
-    --primary: 173 80% 40%;
+    --primary: 173 80% 36%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 15% 92%;
-    --secondary-foreground: 220 25% 10%;
+    --secondary: 210 16% 93%;
+    --secondary-foreground: 220 20% 14%;
 
-    --muted: 220 15% 94%;
+    --muted: 210 16% 95%;
     --muted-foreground: 220 10% 46%;
 
-    --accent: 173 80% 40%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 173 40% 94%;
+    --accent-foreground: 173 80% 26%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 15% 90%;
-    --input: 220 15% 90%;
-    --ring: 173 80% 40%;
+    --border: 220 14% 89%;
+    --input: 220 14% 89%;
+    --ring: 173 80% 36%;
 
     --radius: 0.625rem;
 
-    --sidebar-background: 220 25% 8%;
-    --sidebar-foreground: 220 10% 80%;
-    --sidebar-primary: 173 80% 40%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 220 15% 40%;
+    --sidebar-primary: 173 80% 36%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 20% 14%;
-    --sidebar-accent-foreground: 220 10% 90%;
-    --sidebar-border: 220 20% 16%;
-    --sidebar-ring: 173 80% 40%;
+    --sidebar-accent: 173 40% 95%;
+    --sidebar-accent-foreground: 220 20% 14%;
+    --sidebar-border: 220 14% 91%;
+    --sidebar-ring: 173 80% 36%;
 
     /* Status colors */
-    --status-success: 152 69% 41%;
+    --status-success: 152 69% 36%;
     --status-warning: 38 92% 50%;
     --status-danger: 0 72% 51%;
-    --status-info: 210 100% 56%;
+    --status-info: 210 100% 50%;
     --status-blocked: 0 72% 51%;
     --status-waiting: 38 92% 50%;
-    --status-active: 173 80% 40%;
+    --status-active: 173 80% 36%;
 
     /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(173 80% 40%), hsl(190 90% 45%));
-    --gradient-dark: linear-gradient(135deg, hsl(220 25% 6%), hsl(220 25% 12%));
-    --gradient-card: linear-gradient(135deg, hsl(220 25% 10%), hsl(220 25% 14%));
-    --gradient-hero: linear-gradient(160deg, hsl(220 25% 4%), hsl(220 25% 10%) 50%, hsl(173 80% 10%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(173 80% 36%), hsl(190 80% 42%));
+    --gradient-dark: linear-gradient(135deg, hsl(220 20% 96%), hsl(210 20% 98%));
+    --gradient-card: linear-gradient(135deg, hsl(0 0% 100%), hsl(210 20% 98%));
+    --gradient-hero: linear-gradient(160deg, hsl(210 25% 97%), hsl(210 20% 99%) 50%, hsl(173 30% 96%) 100%);
 
     /* Shadows */
-    --shadow-sm: 0 1px 2px hsl(220 25% 10% / 0.05);
-    --shadow-md: 0 4px 12px hsl(220 25% 10% / 0.08);
-    --shadow-lg: 0 12px 40px hsl(220 25% 10% / 0.12);
-    --shadow-glow: 0 0 30px hsl(173 80% 40% / 0.15);
+    --shadow-sm: 0 1px 2px hsl(220 20% 14% / 0.04);
+    --shadow-md: 0 4px 12px hsl(220 20% 14% / 0.06);
+    --shadow-lg: 0 12px 40px hsl(220 20% 14% / 0.08);
+    --shadow-glow: 0 0 30px hsl(173 80% 36% / 0.12);
   }
 
   .dark {
@@ -136,8 +136,8 @@
 
   .glass {
     @apply backdrop-blur-xl;
-    background: hsl(220 25% 10% / 0.6);
-    border: 1px solid hsl(220 20% 20% / 0.5);
+    background: hsl(0 0% 100% / 0.7);
+    border: 1px solid hsl(220 14% 89% / 0.6);
   }
 
   .status-dot {

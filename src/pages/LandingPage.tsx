@@ -48,7 +48,7 @@ export default function LandingPage() {
       {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-hero" />
-        <div className="absolute inset-0" style={{ backgroundImage: "radial-gradient(circle at 50% 50%, hsl(173 80% 40% / 0.06) 0%, transparent 60%)" }} />
+        <div className="absolute inset-0" style={{ backgroundImage: "radial-gradient(circle at 50% 50%, hsl(173 80% 36% / 0.08) 0%, transparent 60%)" }} />
         <div className="relative mx-auto max-w-7xl px-6 py-24 lg:py-36">
           <div className="max-w-3xl">
             <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-xs font-medium text-primary mb-6">
