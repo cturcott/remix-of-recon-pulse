@@ -21,7 +21,8 @@ const bottomNavItems = [
 
 export default function AppSidebar() {
   const location = useLocation();
-
+  const { profile } = useAuth();
+  const initials = `${profile?.first_name?.[0] ?? ""}${profile?.last_name?.[0] ?? ""}`.toUpperCase() || "??";
   return (
     <aside className="fixed left-0 top-0 z-40 flex h-screen w-64 flex-col bg-sidebar border-r border-sidebar-border shadow-sm">
       {/* Logo */}
