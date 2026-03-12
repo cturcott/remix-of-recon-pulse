@@ -1,0 +1,1 @@
+ALTER TABLE public.workflow_stages ADD COLUMN sla_days integer NOT NULL DEFAULT 5;

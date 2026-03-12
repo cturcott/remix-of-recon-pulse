@@ -1180,6 +1180,7 @@ export type Database = {
           is_required: boolean
           is_start_stage: boolean
           name: string
+          sla_days: number
           sort_order: number
           stage_key: string | null
           updated_at: string
@@ -1193,6 +1194,7 @@ export type Database = {
           is_required?: boolean
           is_start_stage?: boolean
           name: string
+          sla_days?: number
           sort_order?: number
           stage_key?: string | null
           updated_at?: string
@@ -1206,6 +1208,7 @@ export type Database = {
           is_required?: boolean
           is_start_stage?: boolean
           name?: string
+          sla_days?: number
           sort_order?: number
           stage_key?: string | null
           updated_at?: string
