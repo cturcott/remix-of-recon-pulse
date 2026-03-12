@@ -57,6 +57,10 @@ const AppRoutes = () => (
     <Route path="/admin/dealerships" element={<ProtectedRoute><AdminRoute><DealershipManagement /></AdminRoute></ProtectedRoute>} />
     <Route path="/admin/users" element={<ProtectedRoute><AdminRoute><UserManagement /></AdminRoute></ProtectedRoute>} />
     <Route path="/admin/email-settings" element={<ProtectedRoute><AdminRoute><EmailSettings /></AdminRoute></ProtectedRoute>} />
+    <Route path="/import/settings" element={<ProtectedRoute><ImportSettings /></ProtectedRoute>} />
+    <Route path="/import/history" element={<ProtectedRoute><ImportHistory /></ProtectedRoute>} />
+    <Route path="/import/batch/:batchId" element={<ProtectedRoute><ImportBatchDetail /></ProtectedRoute>} />
+    <Route path="/import/review" element={<ProtectedRoute><ImportReviewQueue /></ProtectedRoute>} />
     <Route path="*" element={<NotFound />} />
   </Routes>
 );
