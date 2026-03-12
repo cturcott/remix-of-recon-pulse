@@ -264,7 +264,7 @@ export default function CommandCenter() {
   // ─── Render ───
   return (
     <AppLayout>
-      <div className="flex flex-col h-[calc(100vh-3.5rem)] -m-4 sm:-m-6 lg:-m-8">
+      <div className="flex flex-col h-[calc(100vh-3.5rem)] -m-4 sm:-m-6 lg:-m-8 -mt-4 sm:-mt-6 lg:-mt-8">
         {/* Top bar: KPI summary + controls */}
         <div className="flex items-center justify-between border-b border-border px-4 py-2.5 bg-card shrink-0">
           <div className="flex items-center gap-4">
