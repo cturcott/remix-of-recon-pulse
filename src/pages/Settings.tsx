@@ -11,7 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useDealership } from "@/contexts/DealershipContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { Save, Building2, User, Bell, Shield, Loader2 } from "lucide-react";
+import { Save, Building2, User, Bell, Shield, Loader2, Timer } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export default function Settings() {
