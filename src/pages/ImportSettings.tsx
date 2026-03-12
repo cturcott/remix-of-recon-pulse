@@ -1142,7 +1142,7 @@ export default function ImportSettings() {
                       {previewing ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Eye className="h-4 w-4 mr-1" />}
                       Preview Import
                     </Button>
-                    <Button onClick={handleSaveMapping} disabled={savingMapping}>
+                    <Button onClick={() => handleSaveMapping()} disabled={savingMapping}>
                       {savingMapping ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Save className="h-4 w-4 mr-1" />}
                       Save Mapping
                     </Button>
