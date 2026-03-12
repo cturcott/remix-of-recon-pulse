@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import AppLayout from "@/components/AppLayout";
 import StatCard from "@/components/StatCard";
-import { Building2, Users, CheckCircle, AlertTriangle } from "lucide-react";
+import { Building2, Users, CheckCircle, AlertTriangle, Mail } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
@@ -66,6 +66,18 @@ export default function AdminDashboard() {
               <h3 className="text-lg font-semibold text-foreground">Manage Users</h3>
             </div>
             <p className="text-sm text-muted-foreground">Create users, assign dealerships, and manage roles.</p>
+          </div>
+        </Link>
+
+        <Link to="/admin/email-settings" className="group">
+          <div className="rounded-xl border border-border bg-card p-6 transition-all hover:border-primary/50 hover:shadow-glow">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <Mail className="h-5 w-5" />
+              </div>
+              <h3 className="text-lg font-semibold text-foreground">Email Settings (Postmark)</h3>
+            </div>
+            <p className="text-sm text-muted-foreground">Configure Postmark server token, sender settings, and test delivery.</p>
           </div>
         </Link>
       </div>
