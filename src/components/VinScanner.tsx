@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Html5Qrcode } from "html5-qrcode";
+import { Html5Qrcode, Html5QrcodeSupportedFormats } from "html5-qrcode";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Camera, X } from "lucide-react";
@@ -26,7 +26,14 @@ export default function VinScanner({ onScan }: VinScannerProps) {
   const startScanner = useCallback(async () => {
     setError(null);
     try {
-      const scanner = new Html5Qrcode(readerId);
+      const scanner = new Html5Qrcode(readerId, {
+        formatsToSupport: [
+          Html5QrcodeSupportedFormats.CODE_39,
+          Html5QrcodeSupportedFormats.QR_CODE,
+          Html5QrcodeSupportedFormats.DATA_MATRIX,
+        ],
+        verbose: false,
+      });
       scannerRef.current = scanner;
 
       await scanner.start(
