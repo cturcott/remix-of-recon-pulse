@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, Play } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import heroBg from "@/assets/hero-bg-tire.jpg";
 
 export default function HeroSection() {
