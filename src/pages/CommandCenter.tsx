@@ -271,9 +271,6 @@ export default function CommandCenter() {
         {/* Top bar: KPI metrics + add vehicle */}
         <div className="flex items-center justify-between border-b border-border px-4 py-2 bg-card shrink-0 gap-2 overflow-x-auto">
           <div className="flex items-center gap-3 sm:gap-4 shrink-0">
-            <h1 className="text-lg font-bold text-foreground hidden lg:block">
-              Recon Board
-            </h1>
             {/* Inline KPI chips */}
             <div className="flex items-center gap-2 text-xs">
               <span className="flex items-center gap-1.5 rounded-md bg-muted px-2.5 py-1.5 font-medium text-foreground">

@@ -13,7 +13,7 @@ import {
 import { cn } from "@/lib/utils";
 
 const primaryLinks = [
-  { label: "Recon Board", icon: Kanban, path: "/command-center" },
+  { label: "Overview", icon: Kanban, path: "/command-center" },
   { label: "Vehicles", icon: Car, path: "/vehicles" },
   { label: "Approvals", icon: FileText, path: "/approvals" },
 ];
