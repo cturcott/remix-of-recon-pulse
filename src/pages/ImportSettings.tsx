@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AppLayout from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import {
   Save, Upload, Loader2, Server, FileSpreadsheet, ArrowRight,
-  Eye, Play, Settings2, Trash2, Plus, AlertTriangle, CheckCircle2, XCircle
+  Eye, Play, Settings2, Trash2, Plus, AlertTriangle, CheckCircle2, XCircle,
+  FileUp, Columns, Table2
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -45,6 +46,16 @@ const TRANSFORMS = [
   { value: "lowercase", label: "lowercase" },
   { value: "numeric_only", label: "Numeric only" },
 ];
+
+function colLetter(index: number): string {
+  let result = "";
+  let n = index;
+  while (n >= 0) {
+    result = String.fromCharCode(65 + (n % 26)) + result;
+    n = Math.floor(n / 26) - 1;
+  }
+  return result;
+}
 
 interface MappingRule {
   source_column: string;
@@ -130,6 +141,7 @@ export default function ImportSettings() {
   // Mapping state
   const [mappingRules, setMappingRules] = useState<MappingRule[]>([]);
   const [sampleHeaders, setSampleHeaders] = useState<string[]>([]);
+  const [sampleRows, setSampleRows] = useState<string[][]>([]);
   const [sampleFile, setSampleFile] = useState<string>("");
   const [savingMapping, setSavingMapping] = useState(false);
 
@@ -140,6 +152,16 @@ export default function ImportSettings() {
   // Import state
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<any>(null);
+
+  // Column options with letters
+  const columnOptions = useMemo(() => {
+    return sampleHeaders.map((h, i) => ({
+      value: h,
+      label: `Col ${colLetter(i)} — "${h}"`,
+      letter: colLetter(i),
+      sampleValues: sampleRows.slice(0, 3).map(row => row[i] || "").filter(Boolean),
+    }));
+  }, [sampleHeaders, sampleRows]);
 
   useEffect(() => {
     if (config) {
@@ -206,42 +228,82 @@ export default function ImportSettings() {
     }
   };
 
-  const handleSampleUploadOld = null; // removed
-
-  // Fix the auto-mapping - simpler version
-  const handleSampleUploadFixed = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSampleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onload = (ev) => {
       const text = ev.target?.result as string;
       setSampleFile(text);
-      const firstLine = text.split(/\r?\n/)[0];
-      if (firstLine) {
-        const del = delimiter || ",";
-        const headers = firstLine.split(del).map(h => h.replace(/^["']|["']$/g, "").trim());
+      const lines = text.split(/\r?\n/).filter(l => l.trim());
+      const del = delimiter || ",";
+
+      const parseLine = (line: string): string[] => {
+        const result: string[] = [];
+        let current = "";
+        let inQuotes = false;
+        for (let i = 0; i < line.length; i++) {
+          const ch = line[i];
+          if (ch === '"') {
+            inQuotes = !inQuotes;
+          } else if (ch === del && !inQuotes) {
+            result.push(current.trim());
+            current = "";
+          } else {
+            current += ch;
+          }
+        }
+        result.push(current.trim());
+        return result;
+      };
+
+      if (lines.length > 0) {
+        const headers = parseLine(lines[0]).map(h => h.replace(/^["']|["']$/g, "").trim());
         setSampleHeaders(headers);
+
+        // Parse sample data rows (up to 5)
+        const dataRows = lines.slice(1, 6).map(line => parseLine(line));
+        setSampleRows(dataRows);
+
+        // Auto-map if no existing mapping
         if (mappingRules.length === 0) {
-          const autoMapped: MappingRule[] = headers.map(h => {
-            const lower = h.toLowerCase().replace(/[^a-z0-9]/g, "_");
-            let targetField = "";
-            for (const f of RECON_FIELDS) {
-              if (f.value === lower || lower.includes(f.value) ||
-                (f.value === "vin" && lower.includes("vin")) ||
-                (f.value === "stock_number" && (lower.includes("stock") || lower.includes("stk"))) ||
-                (f.value === "mileage" && (lower.includes("mile") || lower.includes("odometer"))) ||
-                (f.value === "year" && lower.includes("year")) ||
-                (f.value === "make" && (lower === "make" || lower === "brand")) ||
-                (f.value === "model" && lower.includes("model")) ||
-                (f.value === "exterior_color" && (lower.includes("ext") && lower.includes("color")))
+          const autoMapped: MappingRule[] = RECON_FIELDS.map(field => {
+            let bestMatch = "";
+            for (const h of headers) {
+              const lower = h.toLowerCase().replace(/[^a-z0-9]/g, "_");
+              if (
+                field.value === lower || lower.includes(field.value) ||
+                (field.value === "vin" && lower.includes("vin")) ||
+                (field.value === "stock_number" && (lower.includes("stock") || lower.includes("stk"))) ||
+                (field.value === "mileage" && (lower.includes("mile") || lower.includes("odometer"))) ||
+                (field.value === "year" && lower.includes("year")) ||
+                (field.value === "make" && (lower === "make" || lower === "brand")) ||
+                (field.value === "model" && lower.includes("model")) ||
+                (field.value === "trim" && lower === "trim") ||
+                (field.value === "exterior_color" && lower.includes("ext") && lower.includes("color")) ||
+                (field.value === "interior_color" && lower.includes("int") && lower.includes("color")) ||
+                (field.value === "body_style" && lower.includes("body")) ||
+                (field.value === "engine" && lower.includes("engine")) ||
+                (field.value === "drivetrain" && lower.includes("drive")) ||
+                (field.value === "fuel_type" && lower.includes("fuel")) ||
+                (field.value === "acv" && (lower.includes("acv") || lower.includes("cost") || lower.includes("price"))) ||
+                (field.value === "acquisition_source" && lower.includes("source")) ||
+                (field.value === "lot_location" && lower.includes("lot")) ||
+                (field.value === "notes" && lower.includes("note"))
               ) {
-                targetField = f.value;
+                bestMatch = h;
                 break;
               }
             }
-            return { source_column: h, target_field: targetField, default_value: "", transform: targetField === "vin" ? "uppercase" : "trim" };
+            return {
+              source_column: bestMatch,
+              target_field: field.value,
+              default_value: "",
+              transform: field.value === "vin" ? "uppercase" : "trim",
+            };
           });
           setMappingRules(autoMapped);
+          toast.success(`Auto-detected ${headers.length} columns. Review the mapping below.`);
         }
       }
     };
@@ -250,6 +312,15 @@ export default function ImportSettings() {
 
   const handleSaveMapping = async () => {
     if (!config || !currentDealership) return;
+
+    // Validate required fields are mapped
+    const mappedTargets = mappingRules.filter(r => r.source_column).map(r => r.target_field);
+    const missingRequired = RECON_FIELDS.filter(f => f.required && !mappedTargets.includes(f.value));
+    if (missingRequired.length > 0) {
+      toast.error(`Required fields not mapped: ${missingRequired.map(f => f.label).join(", ")}`);
+      return;
+    }
+
     setSavingMapping(true);
     try {
       // Deactivate old mappings
@@ -273,14 +344,6 @@ export default function ImportSettings() {
     } finally {
       setSavingMapping(false);
     }
-  };
-
-  const addMappingRule = () => {
-    setMappingRules(prev => [...prev, { source_column: "", target_field: "", default_value: "", transform: "trim" }]);
-  };
-
-  const removeMappingRule = (index: number) => {
-    setMappingRules(prev => prev.filter((_, i) => i !== index));
   };
 
   const updateMappingRule = (index: number, field: keyof MappingRule, value: string) => {
@@ -363,6 +426,9 @@ export default function ImportSettings() {
     );
   }
 
+  const mappedCount = mappingRules.filter(r => r.source_column).length;
+  const hasMapping = !!activeMapping;
+
   return (
     <AppLayout>
       <div className="mb-6 flex items-center justify-between">
@@ -373,6 +439,11 @@ export default function ImportSettings() {
           </p>
         </div>
         <div className="flex gap-2">
+          <Link to="/import/review">
+            <Button variant="outline" size="sm">
+              <Eye className="h-4 w-4 mr-1" /> Review Queue
+            </Button>
+          </Link>
           <Link to="/import/history">
             <Button variant="outline" size="sm">
               <FileSpreadsheet className="h-4 w-4 mr-1" /> Import History
@@ -381,7 +452,23 @@ export default function ImportSettings() {
         </div>
       </div>
 
-      <div className="max-w-3xl space-y-6">
+      <div className="max-w-4xl space-y-6">
+        {/* Mapping Status Banner */}
+        {config && !hasMapping && (
+          <div className="rounded-xl border-2 border-dashed border-primary/40 bg-primary/5 p-5 flex items-start gap-4">
+            <div className="rounded-lg bg-primary/10 p-2.5">
+              <FileUp className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-foreground">First-Time Setup: Column Mapping Required</h3>
+              <p className="text-sm text-muted-foreground mt-1">
+                Upload a sample CSV file below to map its columns to vehicle intake fields.
+                The first FTP file will be held until this mapping is configured and saved.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* FTP Configuration */}
         <section className="rounded-xl border border-border bg-card p-6">
           <div className="flex items-center gap-2 mb-4">
@@ -515,99 +602,188 @@ export default function ImportSettings() {
           </div>
         </section>
 
-        {/* Field Mapping */}
+        {/* Column Mapping */}
         {config && (
           <section className="rounded-xl border border-border bg-card p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <Settings2 className="h-5 w-5 text-primary" />
-              <h2 className="text-lg font-semibold text-foreground">Field Mapping</h2>
-              {activeMapping && <Badge variant="outline" className="ml-auto">v{activeMapping.version_number}</Badge>}
+            <div className="flex items-center gap-2 mb-1">
+              <Columns className="h-5 w-5 text-primary" />
+              <h2 className="text-lg font-semibold text-foreground">CSV Column Mapping</h2>
+              <div className="ml-auto flex items-center gap-2">
+                {activeMapping && <Badge variant="outline">v{activeMapping.version_number}</Badge>}
+                {hasMapping ? (
+                  <Badge className="bg-primary/10 text-primary border-primary/20">{mappedCount} fields mapped</Badge>
+                ) : (
+                  <Badge variant="destructive">Not configured</Badge>
+                )}
+              </div>
+            </div>
+            <p className="text-sm text-muted-foreground mb-4">
+              Map each CSV column to its corresponding vehicle intake field. Upload a sample file to auto-detect columns.
+            </p>
+
+            {/* Upload Sample */}
+            <div className="rounded-lg border border-dashed border-border bg-muted/30 p-4 mb-5">
+              <div className="flex items-center gap-3">
+                <FileUp className="h-5 w-5 text-muted-foreground shrink-0" />
+                <div className="flex-1">
+                  <Label className="text-sm font-medium">Upload Sample CSV</Label>
+                  <p className="text-xs text-muted-foreground">Upload a CSV file to detect column headers and preview sample data</p>
+                </div>
+                <Input type="file" accept=".csv,.txt" onChange={handleSampleUpload} ref={fileInputRef} className="max-w-64" />
+              </div>
             </div>
 
-            <div className="mb-4">
-              <Label>Upload Sample CSV to Auto-Detect Headers</Label>
-              <div className="mt-1.5">
-                <Input type="file" accept=".csv,.txt" onChange={handleSampleUploadFixed} ref={fileInputRef} />
+            {/* CSV Column Preview Table */}
+            {sampleHeaders.length > 0 && (
+              <div className="mb-5">
+                <div className="flex items-center gap-2 mb-2">
+                  <Table2 className="h-4 w-4 text-muted-foreground" />
+                  <h3 className="text-sm font-semibold text-foreground">Detected Columns</h3>
+                  <span className="text-xs text-muted-foreground">({sampleHeaders.length} columns found)</span>
+                </div>
+                <div className="rounded-lg border border-border overflow-auto max-h-48">
+                  <table className="w-full text-sm">
+                    <thead className="bg-muted/50 sticky top-0">
+                      <tr>
+                        <th className="px-3 py-2 text-left text-xs font-semibold text-muted-foreground w-16">Col</th>
+                        <th className="px-3 py-2 text-left text-xs font-semibold text-muted-foreground">Header Name</th>
+                        <th className="px-3 py-2 text-left text-xs font-semibold text-muted-foreground">Sample Values</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {sampleHeaders.map((h, i) => (
+                        <tr key={i} className="border-t border-border">
+                          <td className="px-3 py-1.5">
+                            <Badge variant="outline" className="font-mono text-xs">{colLetter(i)}</Badge>
+                          </td>
+                          <td className="px-3 py-1.5 font-medium text-foreground text-xs">{h}</td>
+                          <td className="px-3 py-1.5 text-xs text-muted-foreground font-mono truncate max-w-64">
+                            {sampleRows.slice(0, 3).map(row => row[i] || "").filter(Boolean).join(" · ") || "—"}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-              {sampleHeaders.length > 0 && (
-                <p className="text-xs text-muted-foreground mt-1">
-                  Detected {sampleHeaders.length} columns: {sampleHeaders.join(", ")}
-                </p>
-              )}
-            </div>
+            )}
 
             <Separator className="my-4" />
 
-            <div className="space-y-3">
-              <div className="grid grid-cols-12 gap-2 text-xs font-medium text-muted-foreground px-1">
-                <div className="col-span-3">CSV Column</div>
-                <div className="col-span-1 flex items-center justify-center"><ArrowRight className="h-3 w-3" /></div>
-                <div className="col-span-3">Recon Pulse Field</div>
-                <div className="col-span-2">Transform</div>
-                <div className="col-span-2">Default</div>
-                <div className="col-span-1"></div>
+            {/* Mapping Table */}
+            <div className="space-y-2">
+              <h3 className="text-sm font-semibold text-foreground">Field Assignments</h3>
+              <p className="text-xs text-muted-foreground mb-3">
+                For each vehicle field, select which CSV column provides the data. Fields marked with * are required.
+              </p>
+
+              <div className="rounded-lg border border-border overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/50">
+                    <tr>
+                      <th className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground w-44">Vehicle Field</th>
+                      <th className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground">CSV Column</th>
+                      <th className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground w-36">Transform</th>
+                      <th className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground w-32">Default Value</th>
+                      <th className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground w-40">Preview</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {mappingRules.map((rule, i) => {
+                      const fieldDef = RECON_FIELDS.find(f => f.value === rule.target_field);
+                      const colIdx = sampleHeaders.indexOf(rule.source_column);
+                      const previewValues = colIdx >= 0
+                        ? sampleRows.slice(0, 2).map(row => row[colIdx] || "").filter(Boolean)
+                        : [];
+
+                      return (
+                        <tr key={i} className="border-t border-border hover:bg-muted/20 transition-colors">
+                          <td className="px-4 py-2">
+                            <span className="font-medium text-foreground text-xs">
+                              {fieldDef?.label || rule.target_field}
+                              {fieldDef?.required && <span className="text-destructive ml-0.5">*</span>}
+                            </span>
+                          </td>
+                          <td className="px-4 py-2">
+                            {sampleHeaders.length > 0 ? (
+                              <Select value={rule.source_column} onValueChange={v => updateMappingRule(i, "source_column", v === "__none__" ? "" : v)}>
+                                <SelectTrigger className="text-xs h-8">
+                                  <SelectValue placeholder="— Not mapped —" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="__none__">— Not mapped —</SelectItem>
+                                  {columnOptions.map(opt => (
+                                    <SelectItem key={opt.value} value={opt.value}>
+                                      <span className="font-mono text-muted-foreground mr-1.5">{opt.letter}</span>
+                                      {opt.value}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            ) : (
+                              <Input
+                                value={rule.source_column}
+                                onChange={e => updateMappingRule(i, "source_column", e.target.value)}
+                                placeholder="Column name"
+                                className="text-xs h-8"
+                              />
+                            )}
+                          </td>
+                          <td className="px-4 py-2">
+                            <Select value={rule.transform} onValueChange={v => updateMappingRule(i, "transform", v)}>
+                              <SelectTrigger className="text-xs h-8"><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                {TRANSFORMS.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
+                              </SelectContent>
+                            </Select>
+                          </td>
+                          <td className="px-4 py-2">
+                            <Input
+                              value={rule.default_value}
+                              onChange={e => updateMappingRule(i, "default_value", e.target.value)}
+                              placeholder="—"
+                              className="text-xs h-8"
+                            />
+                          </td>
+                          <td className="px-4 py-2">
+                            {previewValues.length > 0 ? (
+                              <span className="text-xs text-muted-foreground font-mono truncate block max-w-36" title={previewValues.join(", ")}>
+                                {previewValues[0]}
+                              </span>
+                            ) : rule.source_column ? (
+                              <span className="text-xs text-muted-foreground italic">No sample data</span>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">—</span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
-
-              {mappingRules.map((rule, i) => (
-                <div key={i} className="grid grid-cols-12 gap-2 items-center">
-                  <div className="col-span-3">
-                    {sampleHeaders.length > 0 ? (
-                      <Select value={rule.source_column} onValueChange={v => updateMappingRule(i, "source_column", v)}>
-                        <SelectTrigger className="text-sm"><SelectValue placeholder="Select..." /></SelectTrigger>
-                        <SelectContent>
-                          {sampleHeaders.map(h => <SelectItem key={h} value={h}>{h}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    ) : (
-                      <Input value={rule.source_column} onChange={e => updateMappingRule(i, "source_column", e.target.value)} placeholder="Column name" className="text-sm" />
-                    )}
-                  </div>
-                  <div className="col-span-1 flex justify-center text-muted-foreground"><ArrowRight className="h-4 w-4" /></div>
-                  <div className="col-span-3">
-                    <Select value={rule.target_field} onValueChange={v => updateMappingRule(i, "target_field", v)}>
-                      <SelectTrigger className="text-sm"><SelectValue placeholder="Target field" /></SelectTrigger>
-                      <SelectContent>
-                        {RECON_FIELDS.map(f => (
-                          <SelectItem key={f.value} value={f.value}>
-                            {f.label} {f.required ? "*" : ""}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="col-span-2">
-                    <Select value={rule.transform} onValueChange={v => updateMappingRule(i, "transform", v)}>
-                      <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        {TRANSFORMS.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="col-span-2">
-                    <Input value={rule.default_value} onChange={e => updateMappingRule(i, "default_value", e.target.value)} placeholder="Default" className="text-sm" />
-                  </div>
-                  <div className="col-span-1">
-                    <Button variant="ghost" size="icon" onClick={() => removeMappingRule(i)} className="h-8 w-8">
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-
-              <Button variant="outline" size="sm" onClick={addMappingRule}>
-                <Plus className="h-3 w-3 mr-1" /> Add Mapping Rule
-              </Button>
             </div>
 
-            <div className="flex justify-end gap-2 mt-6">
-              <Button variant="outline" onClick={handlePreview} disabled={previewing || !sampleFile}>
-                {previewing ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Eye className="h-4 w-4 mr-1" />}
-                Preview Import
-              </Button>
-              <Button onClick={handleSaveMapping} disabled={savingMapping}>
-                {savingMapping ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Save className="h-4 w-4 mr-1" />}
-                Save Mapping
-              </Button>
+            <div className="flex justify-between mt-5">
+              <div className="text-xs text-muted-foreground">
+                {mappedCount} of {mappingRules.length} fields mapped
+                {mappingRules.filter(r => !r.source_column && RECON_FIELDS.find(f => f.value === r.target_field)?.required).length > 0 && (
+                  <span className="text-destructive ml-2">
+                    <AlertTriangle className="h-3 w-3 inline mr-0.5" />
+                    Required fields unmapped
+                  </span>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={handlePreview} disabled={previewing || !sampleFile}>
+                  {previewing ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Eye className="h-4 w-4 mr-1" />}
+                  Preview Import
+                </Button>
+                <Button onClick={handleSaveMapping} disabled={savingMapping}>
+                  {savingMapping ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Save className="h-4 w-4 mr-1" />}
+                  Save Mapping
+                </Button>
+              </div>
             </div>
           </section>
         )}
