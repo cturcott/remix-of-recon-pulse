@@ -38,6 +38,7 @@ export default function CommandCenter() {
   const { currentDealership } = useDealership();
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [dragVehicle, setDragVehicle] = useState<string | null>(null);
 
   const { data: stages = [] } = useQuery<WorkflowStage[]>({
