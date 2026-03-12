@@ -224,6 +224,297 @@ export type Database = {
         }
         Relationships: []
       }
+      vehicle_photos: {
+        Row: {
+          created_at: string
+          dealership_id: string
+          file_url: string
+          id: string
+          photo_type: string | null
+          vehicle_id: string
+        }
+        Insert: {
+          created_at?: string
+          dealership_id: string
+          file_url: string
+          id?: string
+          photo_type?: string | null
+          vehicle_id: string
+        }
+        Update: {
+          created_at?: string
+          dealership_id?: string
+          file_url?: string
+          id?: string
+          photo_type?: string | null
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_photos_dealership_id_fkey"
+            columns: ["dealership_id"]
+            isOneToOne: false
+            referencedRelation: "dealerships"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_photos_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vehicle_stage_history: {
+        Row: {
+          changed_at: string
+          changed_by: string | null
+          dealership_id: string
+          from_stage_id: string | null
+          id: string
+          note: string | null
+          reason_code: string | null
+          to_stage_id: string
+          vehicle_id: string
+        }
+        Insert: {
+          changed_at?: string
+          changed_by?: string | null
+          dealership_id: string
+          from_stage_id?: string | null
+          id?: string
+          note?: string | null
+          reason_code?: string | null
+          to_stage_id: string
+          vehicle_id: string
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string | null
+          dealership_id?: string
+          from_stage_id?: string | null
+          id?: string
+          note?: string | null
+          reason_code?: string | null
+          to_stage_id?: string
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_stage_history_dealership_id_fkey"
+            columns: ["dealership_id"]
+            isOneToOne: false
+            referencedRelation: "dealerships"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_stage_history_from_stage_id_fkey"
+            columns: ["from_stage_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_stages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_stage_history_to_stage_id_fkey"
+            columns: ["to_stage_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_stages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_stage_history_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vehicles: {
+        Row: {
+          acquisition_source: string | null
+          acv: number | null
+          body_style: string | null
+          created_at: string
+          created_by: string | null
+          current_stage_id: string | null
+          dealership_id: string
+          drivetrain: string | null
+          engine: string | null
+          exterior_color: string | null
+          fuel_type: string | null
+          id: string
+          interior_color: string | null
+          lot_location: string | null
+          make: string | null
+          mileage: number
+          model: string | null
+          notes: string | null
+          status: string
+          stock_number: string | null
+          trim: string | null
+          updated_at: string
+          vin: string
+          year: number | null
+        }
+        Insert: {
+          acquisition_source?: string | null
+          acv?: number | null
+          body_style?: string | null
+          created_at?: string
+          created_by?: string | null
+          current_stage_id?: string | null
+          dealership_id: string
+          drivetrain?: string | null
+          engine?: string | null
+          exterior_color?: string | null
+          fuel_type?: string | null
+          id?: string
+          interior_color?: string | null
+          lot_location?: string | null
+          make?: string | null
+          mileage: number
+          model?: string | null
+          notes?: string | null
+          status?: string
+          stock_number?: string | null
+          trim?: string | null
+          updated_at?: string
+          vin: string
+          year?: number | null
+        }
+        Update: {
+          acquisition_source?: string | null
+          acv?: number | null
+          body_style?: string | null
+          created_at?: string
+          created_by?: string | null
+          current_stage_id?: string | null
+          dealership_id?: string
+          drivetrain?: string | null
+          engine?: string | null
+          exterior_color?: string | null
+          fuel_type?: string | null
+          id?: string
+          interior_color?: string | null
+          lot_location?: string | null
+          make?: string | null
+          mileage?: number
+          model?: string | null
+          notes?: string | null
+          status?: string
+          stock_number?: string | null
+          trim?: string | null
+          updated_at?: string
+          vin?: string
+          year?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicles_current_stage_id_fkey"
+            columns: ["current_stage_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_stages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicles_dealership_id_fkey"
+            columns: ["dealership_id"]
+            isOneToOne: false
+            referencedRelation: "dealerships"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vin_decode_logs: {
+        Row: {
+          created_by: string | null
+          decode_payload: Json | null
+          decode_status: string
+          decoded_at: string | null
+          id: string
+          vehicle_id: string | null
+          vin: string
+        }
+        Insert: {
+          created_by?: string | null
+          decode_payload?: Json | null
+          decode_status?: string
+          decoded_at?: string | null
+          id?: string
+          vehicle_id?: string | null
+          vin: string
+        }
+        Update: {
+          created_by?: string | null
+          decode_payload?: Json | null
+          decode_status?: string
+          decoded_at?: string | null
+          id?: string
+          vehicle_id?: string | null
+          vin?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vin_decode_logs_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workflow_stages: {
+        Row: {
+          created_at: string
+          dealership_id: string
+          id: string
+          is_active: boolean
+          is_completion_stage: boolean
+          is_required: boolean
+          is_start_stage: boolean
+          name: string
+          sort_order: number
+          stage_key: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          dealership_id: string
+          id?: string
+          is_active?: boolean
+          is_completion_stage?: boolean
+          is_required?: boolean
+          is_start_stage?: boolean
+          name: string
+          sort_order?: number
+          stage_key?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          dealership_id?: string
+          id?: string
+          is_active?: boolean
+          is_completion_stage?: boolean
+          is_required?: boolean
+          is_start_stage?: boolean
+          name?: string
+          sort_order?: number
+          stage_key?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workflow_stages_dealership_id_fkey"
+            columns: ["dealership_id"]
+            isOneToOne: false
+            referencedRelation: "dealerships"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
