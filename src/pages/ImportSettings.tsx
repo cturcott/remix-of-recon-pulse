@@ -309,8 +309,9 @@ export default function ImportSettings() {
   };
 
   // Save mapping and optionally import
-  const handleSaveMapping = async () => {
-    if (!config || !currentDealership) return;
+  const handleSaveMapping = async (configOverride?: typeof config) => {
+    const configToUse = configOverride || config;
+    if (!configToUse || !currentDealership) return;
 
     const mappedTargets = mappingRules.filter(r => r.source_column).map(r => r.target_field);
     const missingRequired = RECON_FIELDS.filter(f => f.required && !mappedTargets.includes(f.value));
@@ -324,11 +325,11 @@ export default function ImportSettings() {
       // Deactivate old mappings
       await supabase.from("dealership_import_mappings")
         .update({ is_active: false })
-        .eq("import_config_id", config.id);
+        .eq("import_config_id", configToUse.id);
 
       const { data: newMapping, error } = await supabase.from("dealership_import_mappings").insert([{
         dealership_id: currentDealership.id,
-        import_config_id: config.id,
+        import_config_id: configToUse.id,
         version_number: (activeMapping?.version_number || 0) + 1,
         is_active: true,
         mapping_json: mappingRules as unknown as import("@/integrations/supabase/types").Json,
@@ -350,15 +351,39 @@ export default function ImportSettings() {
 
   // Save mapping then import in one flow
   const handleSaveAndImport = async () => {
-    if (!manualUploadContent || !config || !currentDealership) {
+    if (!manualUploadContent || !currentDealership) {
       toast.error("Select a CSV file first");
       return;
+    }
+
+    // Auto-create config if it doesn't exist yet
+    let configToUse = config;
+    if (!configToUse) {
+      try {
+        const { data: newConfig, error } = await supabase
+          .from("dealership_import_configs")
+          .insert({
+            dealership_id: currentDealership.id,
+            is_enabled: false,
+            delimiter,
+            encoding,
+            has_header_row: hasHeader,
+          })
+          .select()
+          .single();
+        if (error) throw error;
+        configToUse = newConfig;
+        queryClient.invalidateQueries({ queryKey: ["import-config"] });
+      } catch (err: any) {
+        toast.error(err.message || "Failed to create import configuration");
+        return;
+      }
     }
 
     // Save mapping first if editing
     let mappingToUse = activeMapping;
     if (editingMapping || !activeMapping) {
-      const saved = await handleSaveMapping();
+      const saved = await handleSaveMapping(configToUse);
       if (!saved) return;
       mappingToUse = saved;
     }
@@ -377,7 +402,7 @@ export default function ImportSettings() {
           csv_content: manualUploadContent,
           file_name: manualUploadFile?.name || "manual-upload.csv",
           mapping_id: mappingToUse.id,
-          config_id: config.id,
+          config_id: configToUse.id,
           preview_only: false,
         },
       });
@@ -1117,7 +1142,7 @@ export default function ImportSettings() {
                       {previewing ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Eye className="h-4 w-4 mr-1" />}
                       Preview Import
                     </Button>
-                    <Button onClick={handleSaveMapping} disabled={savingMapping}>
+                    <Button onClick={() => handleSaveMapping()} disabled={savingMapping}>
                       {savingMapping ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Save className="h-4 w-4 mr-1" />}
                       Save Mapping
                     </Button>
