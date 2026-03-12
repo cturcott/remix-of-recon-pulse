@@ -48,7 +48,7 @@ export default function LandingFooter() {
 
         <div className="border-t border-border pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-xs text-muted-foreground">© 2026 ReconPulse. All rights reserved.</p>
-          <p className="text-xs text-muted-foreground">Sales: (800) 555-1234 &nbsp;·&nbsp; Support: (800) 555-5678</p>
+          <p className="text-xs text-muted-foreground">info@reconpulse.com</p>
         </div>
       </div>
     </footer>

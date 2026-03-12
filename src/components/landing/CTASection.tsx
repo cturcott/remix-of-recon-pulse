@@ -12,21 +12,12 @@ export default function CTASection() {
         <p className="mb-10 max-w-xl mx-auto" style={{ color: "hsl(220, 10%, 70%)" }}>
           Join dealerships that are cutting days off their time-to-line and saving thousands in holding costs every month.
         </p>
-        <div className="flex flex-wrap justify-center gap-4">
-          <Link
-            to="/auth"
-            className="inline-flex items-center gap-2 rounded-lg bg-gradient-primary px-8 py-3.5 text-sm font-semibold text-primary-foreground transition-all hover:opacity-90 shadow-glow"
-          >
-            Schedule a Demo <ArrowRight className="h-4 w-4" />
-          </Link>
-          <a
-            href="tel:+18005551234"
-            className="inline-flex items-center gap-2 rounded-lg border px-8 py-3.5 text-sm font-semibold transition-all hover:bg-[hsl(0,0%,100%)/0.05]"
-            style={{ borderColor: "hsl(0, 0%, 100%, 0.2)", color: "hsl(0, 0%, 100%)" }}
-          >
-            Call Sales: (800) 555-1234
-          </a>
-        </div>
+        <Link
+          to="/auth"
+          className="inline-flex items-center gap-2 rounded-lg bg-gradient-primary px-8 py-3.5 text-sm font-semibold text-primary-foreground transition-all hover:opacity-90 shadow-glow"
+        >
+          Schedule a Demo <ArrowRight className="h-4 w-4" />
+        </Link>
       </div>
     </section>
   );
