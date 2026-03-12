@@ -149,9 +149,56 @@ export default function ImportSettings() {
   const [manualUploadContent, setManualUploadContent] = useState<string>("");
   const [manualImporting, setManualImporting] = useState(false);
 
+  // Preview state
+  const [previewing, setPreviewing] = useState(false);
+  const [previewResult, setPreviewResult] = useState<any>(null);
+
   // Import state
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<any>(null);
+
+  const handleManualFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setManualUploadFile(file);
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setManualUploadContent(ev.target?.result as string);
+    };
+    reader.readAsText(file);
+  };
+
+  const handleManualImport = async () => {
+    if (!manualUploadContent || !config || !activeMapping || !currentDealership) {
+      toast.error("Select a CSV file and ensure mapping is configured");
+      return;
+    }
+    setManualImporting(true);
+    setImportResult(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("process-csv-import", {
+        body: {
+          dealership_id: currentDealership.id,
+          csv_content: manualUploadContent,
+          file_name: manualUploadFile?.name || "manual-upload.csv",
+          mapping_id: activeMapping.id,
+          config_id: config.id,
+          preview_only: false,
+        },
+      });
+      if (error) throw error;
+      setImportResult(data);
+      setManualUploadFile(null);
+      setManualUploadContent("");
+      if (importFileRef.current) importFileRef.current.value = "";
+      queryClient.invalidateQueries({ queryKey: ["vehicles"] });
+      toast.success(`Import complete: ${data.success_rows} vehicles created`);
+    } catch (err: any) {
+      toast.error(err.message || "Import failed");
+    } finally {
+      setManualImporting(false);
+    }
+  };
 
   // Column options with letters
   const columnOptions = useMemo(() => {
