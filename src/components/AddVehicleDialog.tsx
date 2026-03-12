@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Plus, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useDealership } from "@/contexts/DealershipContext";
+import VinScanner from "@/components/VinScanner";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
@@ -217,6 +218,7 @@ export default function AddVehicleDialog() {
                 maxLength={17}
                 className="font-mono tracking-wider"
               />
+              <VinScanner onScan={(scannedVin) => { setVin(scannedVin); setDecodeStatus("idle"); }} />
               <Button
                 type="button"
                 variant="secondary"
