@@ -51,7 +51,6 @@ export default function Settings() {
   const [dealerZip, setDealerZip] = useState("");
   const [dealerContact, setDealerContact] = useState("");
   const [dealerEmail, setDealerEmail] = useState("");
-  const [stageSLADays, setStageSLADays] = useState(5);
   const [savingDealer, setSavingDealer] = useState(false);
 
   // Populate dealership form when data loads
