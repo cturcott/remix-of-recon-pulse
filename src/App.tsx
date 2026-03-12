@@ -7,7 +7,7 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { DealershipProvider } from "@/contexts/DealershipContext";
 import LandingPage from "./pages/LandingPage";
 import Auth from "./pages/Auth";
-import Dashboard from "./pages/Dashboard";
+// Dashboard removed — KPIs moved to Recon Board
 import CommandCenter from "./pages/CommandCenter";
 import VehicleDetail from "./pages/VehicleDetail";
 import Vehicles from "./pages/Vehicles";
