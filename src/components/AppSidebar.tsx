@@ -82,11 +82,11 @@ export default function AppSidebar() {
       <div className="border-t border-sidebar-border p-4">
         <div className="flex items-center gap-3">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-sidebar-accent text-xs font-semibold text-sidebar-accent-foreground">
-            JD
+            {initials}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-sidebar-accent-foreground truncate">John Davis</p>
-            <p className="text-xs text-muted-foreground truncate">Used Car Manager</p>
+            <p className="text-sm font-medium text-sidebar-accent-foreground truncate">{profile?.first_name} {profile?.last_name}</p>
+            <p className="text-xs text-muted-foreground truncate">{profile?.title || profile?.email}</p>
           </div>
         </div>
       </div>
