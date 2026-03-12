@@ -649,6 +649,61 @@ export default function ImportSettings() {
           </div>
         </section>
 
+        {/* Manual CSV Upload */}
+        <section className="rounded-xl border border-border bg-card p-6">
+          <div className="flex items-center gap-2 mb-1">
+            <Upload className="h-5 w-5 text-primary" />
+            <h2 className="text-lg font-semibold text-foreground">Manual CSV Upload</h2>
+          </div>
+          <p className="text-sm text-muted-foreground mb-4">
+            Upload a CSV inventory file directly to import vehicles. Requires a saved column mapping.
+          </p>
+
+          {!activeMapping ? (
+            <div className="rounded-lg border border-dashed border-muted-foreground/30 bg-muted/20 p-5 text-center">
+              <FileUp className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
+              <p className="text-sm text-muted-foreground">
+                Configure and save a column mapping below before uploading inventory files.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="rounded-lg border border-dashed border-border bg-muted/30 p-4">
+                <div className="flex items-center gap-3">
+                  <FileSpreadsheet className="h-5 w-5 text-muted-foreground shrink-0" />
+                  <div className="flex-1">
+                    <Label className="text-sm font-medium">Select CSV File</Label>
+                    <p className="text-xs text-muted-foreground">
+                      Using mapping v{activeMapping.version_number} · Delimiter: "{config?.delimiter || ","}" · {config?.has_header_row ? "Header row" : "No header"}
+                    </p>
+                  </div>
+                  <Input
+                    type="file"
+                    accept=".csv,.txt"
+                    onChange={handleManualFileSelect}
+                    ref={importFileRef}
+                    className="max-w-64"
+                  />
+                </div>
+              </div>
+
+              {manualUploadFile && (
+                <div className="flex items-center justify-between rounded-lg border border-primary/20 bg-primary/5 px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <FileSpreadsheet className="h-4 w-4 text-primary" />
+                    <span className="text-sm font-medium text-foreground">{manualUploadFile.name}</span>
+                    <span className="text-xs text-muted-foreground">({(manualUploadFile.size / 1024).toFixed(1)} KB)</span>
+                  </div>
+                  <Button onClick={handleManualImport} disabled={manualImporting} size="sm">
+                    {manualImporting ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Play className="h-4 w-4 mr-1" />}
+                    Import Now
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+        </section>
+
         {/* Column Mapping */}
         {config && (
           <section className="rounded-xl border border-border bg-card p-6">
