@@ -10,6 +10,7 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import CommandCenter from "./pages/CommandCenter";
 import VehicleDetail from "./pages/VehicleDetail";
+import Vehicles from "./pages/Vehicles";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import DealershipManagement from "./pages/admin/DealershipManagement";
 import UserManagement from "./pages/admin/UserManagement";
