@@ -325,11 +325,11 @@ export default function ImportSettings() {
       // Deactivate old mappings
       await supabase.from("dealership_import_mappings")
         .update({ is_active: false })
-        .eq("import_config_id", config.id);
+        .eq("import_config_id", configToUse.id);
 
       const { data: newMapping, error } = await supabase.from("dealership_import_mappings").insert([{
         dealership_id: currentDealership.id,
-        import_config_id: config.id,
+        import_config_id: configToUse.id,
         version_number: (activeMapping?.version_number || 0) + 1,
         is_active: true,
         mapping_json: mappingRules as unknown as import("@/integrations/supabase/types").Json,
