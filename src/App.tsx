@@ -14,6 +14,7 @@ import Vehicles from "./pages/Vehicles";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import DealershipManagement from "./pages/admin/DealershipManagement";
 import UserManagement from "./pages/admin/UserManagement";
+import EmailSettings from "./pages/admin/EmailSettings";
 import WorkflowSettings from "./pages/WorkflowSettings";
 import WorkflowNotifications from "./pages/WorkflowNotifications";
 import Team from "./pages/Team";
