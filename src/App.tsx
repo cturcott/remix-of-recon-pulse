@@ -7,7 +7,7 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { DealershipProvider } from "@/contexts/DealershipContext";
 import LandingPage from "./pages/LandingPage";
 import Auth from "./pages/Auth";
-import Dashboard from "./pages/Dashboard";
+// Dashboard removed — KPIs moved to Recon Board
 import CommandCenter from "./pages/CommandCenter";
 import VehicleDetail from "./pages/VehicleDetail";
 import Vehicles from "./pages/Vehicles";
@@ -47,8 +47,7 @@ const AppRoutes = () => (
     <Route path="/" element={<LandingPage />} />
     <Route path="/auth" element={<Auth />} />
     <Route path="/command-center" element={<ProtectedRoute><CommandCenter /></ProtectedRoute>} />
-    <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-    {/* Legacy redirects */}
+    <Route path="/dashboard" element={<Navigate to="/command-center" replace />} />
     <Route path="/recon-board" element={<Navigate to="/command-center" replace />} />
     <Route path="/vehicles" element={<ProtectedRoute><Vehicles /></ProtectedRoute>} />
     <Route path="/approvals" element={<ProtectedRoute><Approvals /></ProtectedRoute>} />

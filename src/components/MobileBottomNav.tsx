@@ -1,4 +1,4 @@
-import { LayoutDashboard, Car, Kanban, FileText, Menu } from "lucide-react";
+import { Car, Kanban, FileText, Menu } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button";
 
 const tabs = [
   { label: "Board", icon: Kanban, path: "/command-center" },
-  { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
   { label: "Vehicles", icon: Car, path: "/vehicles" },
   { label: "Approvals", icon: FileText, path: "/approvals" },
 ];
