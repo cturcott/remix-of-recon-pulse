@@ -64,6 +64,23 @@ export default function CommandCenter() {
   const [mobileContextOpen, setMobileContextOpen] = useState(false);
 
   // ─── Queries ───
+  const { data: dealershipDetail } = useQuery({
+    queryKey: ["dealership-detail", currentDealership?.id],
+    queryFn: async () => {
+      if (!currentDealership) return null;
+      const { data, error } = await supabase
+        .from("dealerships")
+        .select("stage_sla_days")
+        .eq("id", currentDealership.id)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!currentDealership,
+  });
+
+  const stageSLADays = (dealershipDetail as any)?.stage_sla_days ?? 5;
+
   const { data: stages = [] } = useQuery<WorkflowStage[]>({
     queryKey: ["workflow-stages", currentDealership?.id],
     queryFn: async () => {
@@ -91,6 +108,29 @@ export default function CommandCenter() {
         .eq("status", "in_recon");
       if (error) throw error;
       return data as Vehicle[];
+    },
+    enabled: !!currentDealership,
+  });
+
+  // Fetch latest stage entry timestamps for each vehicle
+  const { data: stageEntryMap = {} } = useQuery<Record<string, string>>({
+    queryKey: ["vehicle-stage-entries", currentDealership?.id],
+    queryFn: async () => {
+      if (!currentDealership) return {};
+      const { data, error } = await supabase
+        .from("vehicle_stage_history")
+        .select("vehicle_id, to_stage_id, changed_at")
+        .eq("dealership_id", currentDealership.id)
+        .order("changed_at", { ascending: false });
+      if (error) throw error;
+      // Keep the most recent entry per vehicle (first occurrence since sorted desc)
+      const map: Record<string, string> = {};
+      data.forEach((row: any) => {
+        if (!map[row.vehicle_id]) {
+          map[row.vehicle_id] = row.changed_at;
+        }
+      });
+      return map;
     },
     enabled: !!currentDealership,
   });
@@ -186,8 +226,10 @@ export default function CommandCenter() {
     setSelectedStageId(stages[0].id);
   }
 
-  const getAgingHours = (createdAt: string) =>
-    (Date.now() - new Date(createdAt).getTime()) / (1000 * 60 * 60);
+  const getStageAgingDays = (vehicleId: string, createdAt: string) => {
+    const entryTime = stageEntryMap[vehicleId] || createdAt;
+    return (Date.now() - new Date(entryTime).getTime()) / (1000 * 60 * 60 * 24);
+  };
 
   const stagesWithCounts = useMemo(
     () =>
@@ -195,21 +237,22 @@ export default function CommandCenter() {
         const stageVehicles = vehicles.filter(
           (v) => v.current_stage_id === stage.id
         );
+        const overdueInStage = stageVehicles.filter(
+          (v) => getStageAgingDays(v.id, v.created_at) >= stageSLADays
+        ).length;
         return {
           ...stage,
           vehicleCount: stageVehicles.length,
           warningCount: stageVehicles.filter(
             (v) => {
-              const h = getAgingHours(v.created_at);
-              return h > 120 && h <= 240;
+              const d = getStageAgingDays(v.id, v.created_at);
+              return d >= stageSLADays * 0.7 && d < stageSLADays;
             }
           ).length,
-          dangerCount: stageVehicles.filter(
-            (v) => getAgingHours(v.created_at) > 240
-          ).length,
+          dangerCount: overdueInStage,
         };
       }),
-    [stages, vehicles]
+    [stages, vehicles, stageEntryMap, stageSLADays]
   );
 
   const currentStageVehicles = useMemo(() => {
@@ -262,7 +305,7 @@ export default function CommandCenter() {
   const totalInRecon = vehicles.length;
   const getDays = (v: Vehicle) => Math.floor((Date.now() - new Date(v.created_at).getTime()) / (1000 * 60 * 60 * 24));
   const avgDaysInRecon = totalInRecon > 0 ? Math.round(vehicles.reduce((sum, v) => sum + getDays(v), 0) / totalInRecon) : null;
-  const overdueCount = vehicles.filter((v) => getDays(v) > 10).length;
+  const overdueCount = stagesWithCounts.reduce((s, st) => s + st.dangerCount, 0);
 
   // ─── Render ───
   return (

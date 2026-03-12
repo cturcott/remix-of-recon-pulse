@@ -11,7 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useDealership } from "@/contexts/DealershipContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { Save, Building2, User, Bell, Shield, Loader2 } from "lucide-react";
+import { Save, Building2, User, Bell, Shield, Loader2, Timer } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export default function Settings() {
@@ -51,6 +51,7 @@ export default function Settings() {
   const [dealerZip, setDealerZip] = useState("");
   const [dealerContact, setDealerContact] = useState("");
   const [dealerEmail, setDealerEmail] = useState("");
+  const [stageSLADays, setStageSLADays] = useState(5);
   const [savingDealer, setSavingDealer] = useState(false);
 
   // Populate dealership form when data loads
@@ -64,6 +65,7 @@ export default function Settings() {
       setDealerZip(dealership.zip ?? "");
       setDealerContact(dealership.primary_contact_name ?? "");
       setDealerEmail(dealership.primary_contact_email ?? "");
+      setStageSLADays((dealership as any).stage_sla_days ?? 5);
     }
   });
 
@@ -104,7 +106,8 @@ export default function Settings() {
           zip: dealerZip || null,
           primary_contact_name: dealerContact || null,
           primary_contact_email: dealerEmail || null,
-        })
+          stage_sla_days: stageSLADays,
+        } as any)
         .eq("id", currentDealership.id);
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ["dealership-detail"] });
@@ -209,6 +212,41 @@ export default function Settings() {
               <Button size="sm" onClick={handleSaveDealership} disabled={savingDealer}>
                 {savingDealer ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Save className="h-4 w-4 mr-1" />}
                 Save Dealership
+              </Button>
+            </div>
+        </section>
+        )}
+
+        {/* Stage SLA Setting */}
+        {isDealershipAdmin && currentDealership && (
+          <section className="rounded-xl border border-border bg-card p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Timer className="h-5 w-5 text-primary" />
+              <h2 className="text-lg font-semibold text-foreground">Overdue Threshold</h2>
+              <Badge variant="outline" className="text-xs ml-auto">Admin Only</Badge>
+            </div>
+            <p className="text-sm text-muted-foreground mb-4">
+              Set how many days a vehicle can stay in any single workflow stage before it is flagged as overdue.
+            </p>
+            <div className="flex items-center gap-3">
+              <div className="space-y-1.5 w-32">
+                <Label>Days</Label>
+                <Input
+                  type="number"
+                  min={1}
+                  max={90}
+                  value={stageSLADays}
+                  onChange={(e) => setStageSLADays(Math.max(1, parseInt(e.target.value) || 1))}
+                />
+              </div>
+              <p className="text-sm text-muted-foreground mt-5">
+                days before a vehicle is considered overdue in a stage
+              </p>
+            </div>
+            <div className="flex justify-end mt-4">
+              <Button size="sm" onClick={handleSaveDealership} disabled={savingDealer}>
+                {savingDealer ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Save className="h-4 w-4 mr-1" />}
+                Save
               </Button>
             </div>
           </section>

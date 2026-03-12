@@ -1,0 +1,1 @@
+ALTER TABLE public.dealerships ADD COLUMN stage_sla_days integer NOT NULL DEFAULT 5;
