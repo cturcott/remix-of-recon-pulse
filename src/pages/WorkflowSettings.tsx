@@ -22,6 +22,7 @@ interface WorkflowStage {
   is_required: boolean;
   is_start_stage: boolean;
   is_completion_stage: boolean;
+  sla_days: number;
 }
 
 const DEFAULT_STAGES = [
