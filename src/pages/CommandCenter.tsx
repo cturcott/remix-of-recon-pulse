@@ -41,11 +41,13 @@ interface Vehicle {
 
 interface WorkflowStage {
   id: string;
+  id: string;
   name: string;
   sort_order: number;
   is_active: boolean;
   is_start_stage: boolean;
   is_completion_stage: boolean;
+  sla_days: number;
 }
 
 type SortOption = "oldest" | "newest" | "stock";
