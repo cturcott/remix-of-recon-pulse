@@ -1,4 +1,4 @@
-import { Car, LayoutDashboard, Kanban, FileText, Settings, Users, TruckIcon, BarChart3, Bell, Package, Workflow } from "lucide-react";
+import { Car, LayoutDashboard, Kanban, FileText, Settings, Users, TruckIcon, BarChart3, Bell, Package, Workflow, Upload } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 
