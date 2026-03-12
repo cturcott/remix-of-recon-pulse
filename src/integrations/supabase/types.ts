@@ -58,6 +58,144 @@ export type Database = {
           },
         ]
       }
+      dealership_import_configs: {
+        Row: {
+          connection_type: string
+          created_at: string
+          dealership_id: string
+          default_starting_stage_id: string | null
+          delimiter: string
+          duplicate_handling_mode: string
+          encoding: string
+          file_name_pattern: string | null
+          ftp_host: string | null
+          ftp_password_ref: string | null
+          ftp_port: number | null
+          ftp_username: string | null
+          has_header_row: boolean
+          id: string
+          import_frequency: string
+          is_enabled: boolean
+          post_process_action: string
+          remote_path: string | null
+          review_queue_enabled: boolean
+          updated_at: string
+        }
+        Insert: {
+          connection_type?: string
+          created_at?: string
+          dealership_id: string
+          default_starting_stage_id?: string | null
+          delimiter?: string
+          duplicate_handling_mode?: string
+          encoding?: string
+          file_name_pattern?: string | null
+          ftp_host?: string | null
+          ftp_password_ref?: string | null
+          ftp_port?: number | null
+          ftp_username?: string | null
+          has_header_row?: boolean
+          id?: string
+          import_frequency?: string
+          is_enabled?: boolean
+          post_process_action?: string
+          remote_path?: string | null
+          review_queue_enabled?: boolean
+          updated_at?: string
+        }
+        Update: {
+          connection_type?: string
+          created_at?: string
+          dealership_id?: string
+          default_starting_stage_id?: string | null
+          delimiter?: string
+          duplicate_handling_mode?: string
+          encoding?: string
+          file_name_pattern?: string | null
+          ftp_host?: string | null
+          ftp_password_ref?: string | null
+          ftp_port?: number | null
+          ftp_username?: string | null
+          has_header_row?: boolean
+          id?: string
+          import_frequency?: string
+          is_enabled?: boolean
+          post_process_action?: string
+          remote_path?: string | null
+          review_queue_enabled?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dealership_import_configs_dealership_id_fkey"
+            columns: ["dealership_id"]
+            isOneToOne: true
+            referencedRelation: "dealerships"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dealership_import_configs_default_starting_stage_id_fkey"
+            columns: ["default_starting_stage_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_stages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dealership_import_mappings: {
+        Row: {
+          created_at: string
+          created_by_user_id: string | null
+          dealership_id: string
+          id: string
+          import_config_id: string
+          is_active: boolean
+          mapping_json: Json
+          transformation_rules_json: Json | null
+          updated_at: string
+          version_number: number
+        }
+        Insert: {
+          created_at?: string
+          created_by_user_id?: string | null
+          dealership_id: string
+          id?: string
+          import_config_id: string
+          is_active?: boolean
+          mapping_json?: Json
+          transformation_rules_json?: Json | null
+          updated_at?: string
+          version_number?: number
+        }
+        Update: {
+          created_at?: string
+          created_by_user_id?: string | null
+          dealership_id?: string
+          id?: string
+          import_config_id?: string
+          is_active?: boolean
+          mapping_json?: Json
+          transformation_rules_json?: Json | null
+          updated_at?: string
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dealership_import_mappings_dealership_id_fkey"
+            columns: ["dealership_id"]
+            isOneToOne: false
+            referencedRelation: "dealerships"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dealership_import_mappings_import_config_id_fkey"
+            columns: ["import_config_id"]
+            isOneToOne: false
+            referencedRelation: "dealership_import_configs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dealerships: {
         Row: {
           address: string | null
@@ -150,6 +288,161 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      import_batch_rows: {
+        Row: {
+          batch_id: string
+          created_at: string
+          created_vehicle_id: string | null
+          dealership_id: string
+          duplicate_status: string | null
+          final_outcome: string
+          id: string
+          mapped_row_json: Json | null
+          raw_row_json: Json
+          review_status: string | null
+          row_number: number
+          validation_errors_json: Json | null
+          validation_status: string
+          vin_decode_status: string | null
+        }
+        Insert: {
+          batch_id: string
+          created_at?: string
+          created_vehicle_id?: string | null
+          dealership_id: string
+          duplicate_status?: string | null
+          final_outcome?: string
+          id?: string
+          mapped_row_json?: Json | null
+          raw_row_json?: Json
+          review_status?: string | null
+          row_number: number
+          validation_errors_json?: Json | null
+          validation_status?: string
+          vin_decode_status?: string | null
+        }
+        Update: {
+          batch_id?: string
+          created_at?: string
+          created_vehicle_id?: string | null
+          dealership_id?: string
+          duplicate_status?: string | null
+          final_outcome?: string
+          id?: string
+          mapped_row_json?: Json | null
+          raw_row_json?: Json
+          review_status?: string | null
+          row_number?: number
+          validation_errors_json?: Json | null
+          validation_status?: string
+          vin_decode_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "import_batch_rows_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "import_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "import_batch_rows_created_vehicle_id_fkey"
+            columns: ["created_vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "import_batch_rows_dealership_id_fkey"
+            columns: ["dealership_id"]
+            isOneToOne: false
+            referencedRelation: "dealerships"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      import_batches: {
+        Row: {
+          batch_status: string
+          completed_at: string | null
+          created_at: string
+          dealership_id: string
+          error_summary: string | null
+          failed_rows: number | null
+          id: string
+          import_config_id: string | null
+          mapping_id: string | null
+          skipped_rows: number | null
+          source_file_name: string | null
+          source_file_path: string | null
+          started_at: string | null
+          success_rows: number | null
+          total_rows: number | null
+          triggered_by: string | null
+          warning_rows: number | null
+        }
+        Insert: {
+          batch_status?: string
+          completed_at?: string | null
+          created_at?: string
+          dealership_id: string
+          error_summary?: string | null
+          failed_rows?: number | null
+          id?: string
+          import_config_id?: string | null
+          mapping_id?: string | null
+          skipped_rows?: number | null
+          source_file_name?: string | null
+          source_file_path?: string | null
+          started_at?: string | null
+          success_rows?: number | null
+          total_rows?: number | null
+          triggered_by?: string | null
+          warning_rows?: number | null
+        }
+        Update: {
+          batch_status?: string
+          completed_at?: string | null
+          created_at?: string
+          dealership_id?: string
+          error_summary?: string | null
+          failed_rows?: number | null
+          id?: string
+          import_config_id?: string | null
+          mapping_id?: string | null
+          skipped_rows?: number | null
+          source_file_name?: string | null
+          source_file_path?: string | null
+          started_at?: string | null
+          success_rows?: number | null
+          total_rows?: number | null
+          triggered_by?: string | null
+          warning_rows?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "import_batches_dealership_id_fkey"
+            columns: ["dealership_id"]
+            isOneToOne: false
+            referencedRelation: "dealerships"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "import_batches_import_config_id_fkey"
+            columns: ["import_config_id"]
+            isOneToOne: false
+            referencedRelation: "dealership_import_configs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "import_batches_mapping_id_fkey"
+            columns: ["mapping_id"]
+            isOneToOne: false
+            referencedRelation: "dealership_import_mappings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       notification_event_recipients: {
         Row: {
@@ -690,6 +983,9 @@ export type Database = {
           exterior_color: string | null
           fuel_type: string | null
           id: string
+          import_batch_id: string | null
+          import_created: boolean | null
+          import_source_type: string | null
           interior_color: string | null
           lot_location: string | null
           make: string | null
@@ -716,6 +1012,9 @@ export type Database = {
           exterior_color?: string | null
           fuel_type?: string | null
           id?: string
+          import_batch_id?: string | null
+          import_created?: boolean | null
+          import_source_type?: string | null
           interior_color?: string | null
           lot_location?: string | null
           make?: string | null
@@ -742,6 +1041,9 @@ export type Database = {
           exterior_color?: string | null
           fuel_type?: string | null
           id?: string
+          import_batch_id?: string | null
+          import_created?: boolean | null
+          import_source_type?: string | null
           interior_color?: string | null
           lot_location?: string | null
           make?: string | null
@@ -768,6 +1070,13 @@ export type Database = {
             columns: ["dealership_id"]
             isOneToOne: false
             referencedRelation: "dealerships"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicles_import_batch_id_fkey"
+            columns: ["import_batch_id"]
+            isOneToOne: false
+            referencedRelation: "import_batches"
             referencedColumns: ["id"]
           },
         ]
