@@ -1,3 +1,4 @@
+// Vehicle interface kept for reference but vehicles now come from database
 export interface Vehicle {
   id: string;
   vin: string;
@@ -20,18 +21,14 @@ export interface Vehicle {
   blockers?: string;
 }
 
+// Legacy constant - stages now come from workflow_stages table per dealership
 export const RECON_STAGES = [
-  "Stocked",
-  "Inspection",
-  "Service Write-Up",
-  "Estimate Review",
-  "Approval Pending",
-  "Mechanical",
-  "Parts Waiting",
-  "Sublet / Vendor",
-  "Body / Paint",
-  "Detail",
-  "Photos",
-  "QC / Final Check",
-  "Frontline Ready",
+  "Intake & Check-In",
+  "Multi-Point Inspection",
+  "Service Approvals",
+  "Mechanical Repair",
+  "Cosmetic & Sublet Work",
+  "Professional Detail",
+  "Photography & Merchandising",
+  "Final QC & Front-Line Ready",
 ] as const;
