@@ -55,12 +55,17 @@ export default function ImportBatchDetail() {
         <Link to="/import/history">
           <Button variant="ghost" size="icon"><ArrowLeft className="h-4 w-4" /></Button>
         </Link>
-        <div>
+        <div className="flex-1">
           <h1 className="text-2xl font-bold text-foreground">Batch Detail</h1>
           <p className="text-sm text-muted-foreground mt-1">
             {batch?.source_file_name || "Import"} — {batch?.created_at ? format(new Date(batch.created_at), "MMM d, yyyy h:mm a") : ""}
           </p>
         </div>
+        <Link to={`/import/settings?remap_batch=${batchId}`}>
+          <Button variant="outline" size="sm">
+            <AlertTriangle className="h-4 w-4 mr-1" /> Correct Mapping & Re-import
+          </Button>
+        </Link>
       </div>
 
       {isLoading ? (
