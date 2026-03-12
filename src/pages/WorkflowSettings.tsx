@@ -87,6 +87,13 @@ export default function WorkflowSettings() {
     setHasChanges(true);
   };
 
+  const handleSLAChange = (idx: number, value: string) => {
+    const updated = [...stages];
+    updated[idx] = { ...updated[idx], sla_days: Math.max(1, parseInt(value) || 1) };
+    setStages(updated);
+    setHasChanges(true);
+  };
+
   const handleAddStage = () => {
     const maxOrder = stages.length > 0 ? Math.max(...stages.map((s) => s.sort_order)) : 0;
     // Insert before completion stage
@@ -106,6 +113,7 @@ export default function WorkflowSettings() {
       is_required: false,
       is_start_stage: false,
       is_completion_stage: false,
+      sla_days: 5,
     });
     updated.sort((a, b) => a.sort_order - b.sort_order);
     setStages(updated);
