@@ -38,7 +38,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 function AdminRoute({ children }: { children: React.ReactNode }) {
   const { isPlatformAdmin, loading } = useAuth();
   if (loading) return <div className="min-h-screen bg-background flex items-center justify-center text-muted-foreground">Loading...</div>;
-  if (!isPlatformAdmin) return <Navigate to="/dashboard" replace />;
+  if (!isPlatformAdmin) return <Navigate to="/command-center" replace />;
   return <>{children}</>;
 }
 
@@ -46,10 +46,10 @@ const AppRoutes = () => (
   <Routes>
     <Route path="/" element={<LandingPage />} />
     <Route path="/auth" element={<Auth />} />
-    <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-    {/* Redirect /recon-board to /command-center for convenience */}
-    <Route path="/recon-board" element={<Navigate to="/command-center" replace />} />
     <Route path="/command-center" element={<ProtectedRoute><CommandCenter /></ProtectedRoute>} />
+    <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+    {/* Legacy redirects */}
+    <Route path="/recon-board" element={<Navigate to="/command-center" replace />} />
     <Route path="/vehicles" element={<ProtectedRoute><Vehicles /></ProtectedRoute>} />
     <Route path="/approvals" element={<ProtectedRoute><Approvals /></ProtectedRoute>} />
     <Route path="/vehicle/:id" element={<ProtectedRoute><VehicleDetail /></ProtectedRoute>} />
