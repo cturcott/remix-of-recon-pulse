@@ -383,7 +383,7 @@ export default function ImportSettings() {
     // Save mapping first if editing
     let mappingToUse = activeMapping;
     if (editingMapping || !activeMapping) {
-      const saved = await handleSaveMapping();
+      const saved = await handleSaveMapping(configToUse);
       if (!saved) return;
       mappingToUse = saved;
     }
