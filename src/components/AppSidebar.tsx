@@ -1,4 +1,4 @@
-import { Car, LayoutDashboard, Kanban, FileText, Settings, Users, TruckIcon, BarChart3, Bell, Package, Workflow } from "lucide-react";
+import { Car, LayoutDashboard, Kanban, FileText, Settings, Users, TruckIcon, BarChart3, Bell, Package, Workflow, Upload } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -6,6 +6,7 @@ const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
   { label: "Command Center", icon: Kanban, path: "/command-center" },
   { label: "Vehicles", icon: Car, path: "/vehicles" },
+  { label: "CSV Import", icon: Upload, path: "/import/settings" },
   { label: "Approvals", icon: FileText, path: "/approvals" },
   { label: "Vendors", icon: TruckIcon, path: "/vendors" },
   { label: "Parts", icon: Package, path: "/parts" },
