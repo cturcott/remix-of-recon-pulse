@@ -209,6 +209,7 @@ export type Database = {
           phone: string | null
           primary_contact_email: string | null
           primary_contact_name: string | null
+          stage_sla_days: number
           state: string | null
           status: string
           store_code: string | null
@@ -228,6 +229,7 @@ export type Database = {
           phone?: string | null
           primary_contact_email?: string | null
           primary_contact_name?: string | null
+          stage_sla_days?: number
           state?: string | null
           status?: string
           store_code?: string | null
@@ -247,6 +249,7 @@ export type Database = {
           phone?: string | null
           primary_contact_email?: string | null
           primary_contact_name?: string | null
+          stage_sla_days?: number
           state?: string | null
           status?: string
           store_code?: string | null
