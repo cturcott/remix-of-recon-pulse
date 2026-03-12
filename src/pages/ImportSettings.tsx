@@ -309,8 +309,9 @@ export default function ImportSettings() {
   };
 
   // Save mapping and optionally import
-  const handleSaveMapping = async () => {
-    if (!config || !currentDealership) return;
+  const handleSaveMapping = async (configOverride?: typeof config) => {
+    const configToUse = configOverride || config;
+    if (!configToUse || !currentDealership) return;
 
     const mappedTargets = mappingRules.filter(r => r.source_column).map(r => r.target_field);
     const missingRequired = RECON_FIELDS.filter(f => f.required && !mappedTargets.includes(f.value));
