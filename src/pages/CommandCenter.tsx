@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import AppLayout from "@/components/AppLayout";
 import AddVehicleDialog from "@/components/AddVehicleDialog";
 import { supabase } from "@/integrations/supabase/client";
@@ -37,6 +38,7 @@ export default function CommandCenter() {
   const { currentDealership } = useDealership();
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [dragVehicle, setDragVehicle] = useState<string | null>(null);
 
   const { data: stages = [] } = useQuery<WorkflowStage[]>({
@@ -147,7 +149,8 @@ export default function CommandCenter() {
                       key={v.id}
                       draggable
                       onDragStart={() => setDragVehicle(v.id)}
-                      className="rounded-lg border border-border bg-card p-3 cursor-grab hover:shadow-md transition-shadow"
+                      onClick={() => navigate(`/vehicle/${v.id}`)}
+                      className="rounded-lg border border-border bg-card p-3 cursor-grab hover:shadow-md hover:border-primary/40 transition-all"
                     >
                       <div className="flex items-start justify-between mb-1">
                         <p className="text-sm font-semibold text-card-foreground">
