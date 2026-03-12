@@ -52,7 +52,9 @@ export default function StageQueueSidebar({
                 onClick={() => onSelectStage(stage.id)}
                 className={cn(
                   "flex w-full items-center gap-2 px-4 py-2.5 text-left transition-colors",
-                  isActive
+                  hasDangers && !isActive
+                    ? "bg-destructive/8 text-foreground border-l-2 border-destructive hover:bg-destructive/15"
+                    : isActive
                     ? "bg-accent text-accent-foreground border-l-2 border-primary"
                     : "text-muted-foreground hover:bg-muted/50 border-l-2 border-transparent"
                 )}
@@ -60,7 +62,8 @@ export default function StageQueueSidebar({
                 <div className="flex-1 min-w-0">
                   <p className={cn(
                     "text-sm truncate",
-                    isActive ? "font-semibold" : "font-medium"
+                    isActive ? "font-semibold" : "font-medium",
+                    hasDangers && !isActive && "text-destructive"
                   )}>
                     {stage.name}
                   </p>
