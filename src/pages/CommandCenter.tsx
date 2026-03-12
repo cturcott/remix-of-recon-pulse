@@ -1,23 +1,25 @@
+import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import AppLayout from "@/components/AppLayout";
-import AddVehicleDialog from "@/components/AddVehicleDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useDealership } from "@/contexts/DealershipContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { Badge } from "@/components/ui/badge";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
-import { useState } from "react";
-import { Car, Clock } from "lucide-react";
 
-interface WorkflowStage {
-  id: string;
-  name: string;
-  sort_order: number;
-  is_active: boolean;
-  is_start_stage: boolean;
-  is_completion_stage: boolean;
-}
+import AppLayout from "@/components/AppLayout";
+import StageQueueSidebar from "@/components/recon-board/StageQueueSidebar";
+import VehicleWorkCard from "@/components/recon-board/VehicleWorkCard";
+import VehicleContextPanel from "@/components/recon-board/VehicleContextPanel";
+import MobileStageSelector from "@/components/recon-board/MobileStageSelector";
+import AddVehicleDialog from "@/components/AddVehicleDialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Input } from "@/components/ui/input";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import { Search, SlidersHorizontal, ArrowUpDown } from "lucide-react";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 
 interface Vehicle {
   id: string;
@@ -32,15 +34,36 @@ interface Vehicle {
   status: string;
   created_at: string;
   exterior_color: string | null;
+  assigned_to: string | null;
+  notes: string | null;
+  dealership_id: string;
 }
+
+interface WorkflowStage {
+  id: string;
+  name: string;
+  sort_order: number;
+  is_active: boolean;
+  is_start_stage: boolean;
+  is_completion_stage: boolean;
+}
+
+type SortOption = "oldest" | "newest" | "stock";
 
 export default function CommandCenter() {
   const { currentDealership } = useDealership();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const [dragVehicle, setDragVehicle] = useState<string | null>(null);
+  const isMobile = useIsMobile();
 
+  const [selectedStageId, setSelectedStageId] = useState<string | null>(null);
+  const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState<SortOption>("oldest");
+  const [mobileContextOpen, setMobileContextOpen] = useState(false);
+
+  // ─── Queries ───
   const { data: stages = [] } = useQuery<WorkflowStage[]>({
     queryKey: ["workflow-stages", currentDealership?.id],
     queryFn: async () => {
@@ -67,13 +90,63 @@ export default function CommandCenter() {
         .eq("dealership_id", currentDealership.id)
         .eq("status", "in_recon");
       if (error) throw error;
-      return data;
+      return data as Vehicle[];
     },
     enabled: !!currentDealership,
   });
 
+  // Fetch profiles for assigned users
+  const { data: profiles = [] } = useQuery({
+    queryKey: ["dealership-profiles", currentDealership?.id],
+    queryFn: async () => {
+      if (!currentDealership) return [];
+      const { data, error } = await supabase
+        .from("user_dealership_assignments")
+        .select("user_id")
+        .eq("dealership_id", currentDealership.id);
+      if (error) throw error;
+      const userIds = data.map((d: any) => d.user_id);
+      if (userIds.length === 0) return [];
+      const { data: profs, error: e2 } = await supabase
+        .from("profiles")
+        .select("user_id, first_name, last_name")
+        .in("user_id", userIds);
+      if (e2) throw e2;
+      return profs;
+    },
+    enabled: !!currentDealership,
+  });
+
+  // Fetch notes counts per vehicle
+  const { data: notesCounts = {} } = useQuery({
+    queryKey: ["vehicle-notes-count", currentDealership?.id],
+    queryFn: async () => {
+      if (!currentDealership) return {};
+      const { data, error } = await supabase
+        .from("vehicle_notes")
+        .select("vehicle_id")
+        .eq("dealership_id", currentDealership.id);
+      if (error) throw error;
+      const counts: Record<string, number> = {};
+      data.forEach((n: any) => {
+        counts[n.vehicle_id] = (counts[n.vehicle_id] || 0) + 1;
+      });
+      return counts;
+    },
+    enabled: !!currentDealership,
+  });
+
+  // ─── Mutations ───
   const moveVehicle = useMutation({
-    mutationFn: async ({ vehicleId, toStageId, fromStageId }: { vehicleId: string; toStageId: string; fromStageId: string | null }) => {
+    mutationFn: async ({
+      vehicleId,
+      toStageId,
+      fromStageId,
+    }: {
+      vehicleId: string;
+      toStageId: string;
+      fromStageId: string | null;
+    }) => {
       const { error } = await supabase
         .from("vehicles")
         .update({ current_stage_id: toStageId })
@@ -88,103 +161,257 @@ export default function CommandCenter() {
         changed_by: user?.id,
       });
 
-      // Trigger stage notification (fire-and-forget)
-      supabase.functions.invoke("send-stage-notification", {
-        body: {
-          vehicle_id: vehicleId,
-          to_stage_id: toStageId,
-          dealership_id: currentDealership!.id,
-          triggered_by_user_id: user?.id,
-        },
-      }).catch(() => {}); // Don't block on notification failures
+      supabase.functions
+        .invoke("send-stage-notification", {
+          body: {
+            vehicle_id: vehicleId,
+            to_stage_id: toStageId,
+            dealership_id: currentDealership!.id,
+            triggered_by_user_id: user?.id,
+          },
+        })
+        .catch(() => {});
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["vehicles"] });
-      toast.success("Vehicle moved");
+      queryClient.invalidateQueries({ queryKey: ["vehicle-stage-history"] });
+      toast.success("Vehicle moved to next stage");
     },
     onError: (err: any) => toast.error(err.message),
   });
 
-  const handleDrop = (stageId: string) => {
-    if (!dragVehicle) return;
-    const vehicle = vehicles.find((v) => v.id === dragVehicle);
-    if (!vehicle || vehicle.current_stage_id === stageId) return;
-    moveVehicle.mutate({ vehicleId: dragVehicle, toStageId: stageId, fromStageId: vehicle.current_stage_id });
-    setDragVehicle(null);
+  // ─── Computed ───
+  // Auto-select first stage
+  if (!selectedStageId && stages.length > 0) {
+    setSelectedStageId(stages[0].id);
+  }
+
+  const getAgingHours = (createdAt: string) =>
+    (Date.now() - new Date(createdAt).getTime()) / (1000 * 60 * 60);
+
+  const stagesWithCounts = useMemo(
+    () =>
+      stages.map((stage) => {
+        const stageVehicles = vehicles.filter(
+          (v) => v.current_stage_id === stage.id
+        );
+        return {
+          ...stage,
+          vehicleCount: stageVehicles.length,
+          warningCount: stageVehicles.filter(
+            (v) => {
+              const h = getAgingHours(v.created_at);
+              return h > 120 && h <= 240;
+            }
+          ).length,
+          dangerCount: stageVehicles.filter(
+            (v) => getAgingHours(v.created_at) > 240
+          ).length,
+        };
+      }),
+    [stages, vehicles]
+  );
+
+  const currentStageVehicles = useMemo(() => {
+    let result = vehicles.filter((v) => v.current_stage_id === selectedStageId);
+
+    // Search
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(
+        (v) =>
+          v.vin.toLowerCase().includes(q) ||
+          v.stock_number?.toLowerCase().includes(q) ||
+          `${v.year} ${v.make} ${v.model}`.toLowerCase().includes(q)
+      );
+    }
+
+    // Sort
+    result.sort((a, b) => {
+      switch (sortBy) {
+        case "newest":
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        case "stock":
+          return (a.stock_number || "").localeCompare(b.stock_number || "");
+        default: // oldest
+          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      }
+    });
+
+    return result;
+  }, [vehicles, selectedStageId, searchQuery, sortBy]);
+
+  const selectedVehicle = vehicles.find((v) => v.id === selectedVehicleId);
+
+  const getNextStage = (currentStageId: string | null) => {
+    if (!currentStageId) return null;
+    const currentIndex = stages.findIndex((s) => s.id === currentStageId);
+    if (currentIndex < 0 || currentIndex >= stages.length - 1) return null;
+    return stages[currentIndex + 1];
   };
 
-  const getDaysInRecon = (createdAt: string) => {
-    const diff = Date.now() - new Date(createdAt).getTime();
-    return Math.floor(diff / (1000 * 60 * 60 * 24));
+  const getAssigneeName = (assignedTo: string | null) => {
+    if (!assignedTo) return null;
+    const p = profiles.find((pr: any) => pr.user_id === assignedTo);
+    return p ? `${p.first_name} ${p.last_name}` : null;
   };
 
-  const vehiclesByStage = (stageId: string) => vehicles.filter((v) => v.current_stage_id === stageId);
+  const selectedStageName =
+    stages.find((s) => s.id === selectedStageId)?.name ?? "Queue";
 
+  const totalInRecon = vehicles.length;
+
+  // ─── Render ───
   return (
     <AppLayout>
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Command Center</h1>
-          <p className="text-sm text-muted-foreground mt-1">Drag vehicles across stages to update progress</p>
+      <div className="flex flex-col h-[calc(100vh-3.5rem)] -m-4 sm:-m-6 lg:-m-8">
+        {/* Top bar: KPI summary + controls */}
+        <div className="flex items-center justify-between border-b border-border px-4 py-2.5 bg-card shrink-0">
+          <div className="flex items-center gap-4">
+            <h1 className="text-lg font-bold text-foreground hidden sm:block">
+              Recon Board
+            </h1>
+            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+              <span className="font-semibold text-foreground">{totalInRecon}</span> in
+              recon
+              <span className="text-border">|</span>
+              <span className="font-semibold text-destructive">
+                {stagesWithCounts.reduce((s, st) => s + st.dangerCount, 0)}
+              </span>{" "}
+              overdue
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <AddVehicleDialog />
+          </div>
         </div>
-        <AddVehicleDialog />
-      </div>
 
-      <div className="flex gap-4 overflow-x-auto pb-4" style={{ minHeight: "calc(100vh - 160px)" }}>
-        {stages.map((stage) => {
-          const stageVehicles = vehiclesByStage(stage.id);
-          return (
-            <div
-              key={stage.id}
-              className="flex-shrink-0 w-72"
-              onDragOver={(e) => e.preventDefault()}
-              onDrop={() => handleDrop(stage.id)}
-            >
-              <div className="flex items-center justify-between rounded-t-xl border border-border bg-card px-4 py-3">
-                <div className="flex items-center gap-2">
-                  <h3 className="text-sm font-semibold text-card-foreground">{stage.name}</h3>
-                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary/10 px-1.5 text-xs font-semibold text-primary">
-                    {stageVehicles.length}
-                  </span>
-                </div>
+        <div className="flex flex-1 min-h-0">
+          {/* A. Left Sidebar — desktop only */}
+          {!isMobile && (
+            <StageQueueSidebar
+              stages={stagesWithCounts}
+              selectedStageId={selectedStageId}
+              onSelectStage={setSelectedStageId}
+              totalInRecon={totalInRecon}
+            />
+          )}
+
+          {/* B. Center: Vehicle cards */}
+          <div className="flex-1 flex flex-col min-w-0">
+            {/* Mobile stage selector */}
+            {isMobile && (
+              <div className="p-3 border-b border-border">
+                <MobileStageSelector
+                  stages={stagesWithCounts}
+                  selectedStageId={selectedStageId}
+                  onSelectStage={setSelectedStageId}
+                />
               </div>
-              <div className="space-y-2 rounded-b-xl border border-t-0 border-border bg-muted/30 p-3 min-h-[200px]">
-                {stageVehicles.length === 0 ? (
-                  <div className="flex h-24 items-center justify-center rounded-lg border border-dashed border-border">
-                    <p className="text-xs text-muted-foreground">No vehicles</p>
+            )}
+
+            {/* Filter bar */}
+            <div className="flex items-center gap-2 px-4 py-2 border-b border-border bg-muted/30">
+              <div className="relative flex-1 max-w-xs">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                <Input
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search VIN, stock #, vehicle..."
+                  className="h-8 pl-8 text-sm"
+                />
+              </div>
+              <Select
+                value={sortBy}
+                onValueChange={(v) => setSortBy(v as SortOption)}
+              >
+                <SelectTrigger className="h-8 w-[140px] text-xs">
+                  <ArrowUpDown className="h-3 w-3 mr-1" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="oldest">Oldest first</SelectItem>
+                  <SelectItem value="newest">Newest first</SelectItem>
+                  <SelectItem value="stock">Stock #</SelectItem>
+                </SelectContent>
+              </Select>
+              <span className="text-xs text-muted-foreground hidden sm:inline">
+                {currentStageVehicles.length} vehicle
+                {currentStageVehicles.length !== 1 ? "s" : ""} in{" "}
+                <strong>{selectedStageName}</strong>
+              </span>
+            </div>
+
+            {/* Vehicle list */}
+            <ScrollArea className="flex-1">
+              <div className="p-4 space-y-3">
+                {currentStageVehicles.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-16 text-center">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted mb-3">
+                      <SlidersHorizontal className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                    <p className="text-sm font-medium text-muted-foreground">
+                      No vehicles in this stage
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Vehicles will appear here when they enter this workflow
+                      stage
+                    </p>
                   </div>
                 ) : (
-                  stageVehicles.map((v) => (
-                    <div
-                      key={v.id}
-                      draggable
-                      onDragStart={() => setDragVehicle(v.id)}
-                      onClick={() => navigate(`/vehicle/${v.id}`)}
-                      className="rounded-lg border border-border bg-card p-3 cursor-grab hover:shadow-md hover:border-primary/40 transition-all"
-                    >
-                      <div className="flex items-start justify-between mb-1">
-                        <p className="text-sm font-semibold text-card-foreground">
-                          {v.year} {v.make} {v.model}
-                        </p>
-                        <Badge variant="outline" className="text-[10px] shrink-0 ml-1">
-                          <Clock className="h-3 w-3 mr-0.5" />
-                          {getDaysInRecon(v.created_at)}d
-                        </Badge>
-                      </div>
-                      {v.trim && <p className="text-xs text-muted-foreground">{v.trim}</p>}
-                      <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
-                        <Car className="h-3 w-3" />
-                        <span className="font-mono">{v.stock_number || v.vin.slice(-6)}</span>
-                        {v.exterior_color && <span>• {v.exterior_color}</span>}
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-1">{v.mileage.toLocaleString()} mi</p>
-                    </div>
-                  ))
+                  currentStageVehicles.map((v) => {
+                    const nextStage = getNextStage(v.current_stage_id);
+                    return (
+                      <VehicleWorkCard
+                        key={v.id}
+                        vehicle={v}
+                        nextStageName={nextStage?.name ?? null}
+                        assigneeName={getAssigneeName(v.assigned_to)}
+                        notesCount={(notesCounts as Record<string, number>)[v.id] || 0}
+                        isSelected={selectedVehicleId === v.id}
+                        onSelect={() => {
+                          setSelectedVehicleId(v.id);
+                          if (isMobile) setMobileContextOpen(true);
+                        }}
+                        onMoveNext={() => {
+                          if (!nextStage) return;
+                          moveVehicle.mutate({
+                            vehicleId: v.id,
+                            toStageId: nextStage.id,
+                            fromStageId: v.current_stage_id,
+                          });
+                        }}
+                        onViewDetail={() => navigate(`/vehicle/${v.id}`)}
+                      />
+                    );
+                  })
                 )}
               </div>
-            </div>
-          );
-        })}
+            </ScrollArea>
+          </div>
+
+          {/* C. Right context panel — desktop */}
+          {!isMobile && selectedVehicle && (
+            <VehicleContextPanel
+              vehicle={selectedVehicle}
+              stages={stages}
+              onClose={() => setSelectedVehicleId(null)}
+            />
+          )}
+        </div>
+
+        {/* Mobile context panel as sheet */}
+        {isMobile && selectedVehicle && (
+          <Sheet open={mobileContextOpen} onOpenChange={setMobileContextOpen}>
+            <SheetContent side="bottom" className="h-[75vh] p-0 rounded-t-2xl">
+              <VehicleContextPanel
+                vehicle={selectedVehicle}
+                stages={stages}
+                onClose={() => setMobileContextOpen(false)}
+              />
+            </SheetContent>
+          </Sheet>
+        )}
       </div>
     </AppLayout>
   );
