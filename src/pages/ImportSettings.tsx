@@ -162,7 +162,7 @@ export default function ImportSettings() {
 
   useEffect(() => {
     if (activeMapping?.mapping_json) {
-      setMappingRules(activeMapping.mapping_json as MappingRule[]);
+      setMappingRules(activeMapping.mapping_json as unknown as MappingRule[]);
     }
   }, [activeMapping]);
 
