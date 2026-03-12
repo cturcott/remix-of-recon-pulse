@@ -26,7 +26,13 @@ export default function VinScanner({ onScan }: VinScannerProps) {
   const startScanner = useCallback(async () => {
     setError(null);
     try {
-      const scanner = new Html5Qrcode(readerId);
+      const scanner = new Html5Qrcode(readerId, {
+        formatsToSupport: [
+          Html5QrcodeSupportedFormats.CODE_39,
+          Html5QrcodeSupportedFormats.QR_CODE,
+          Html5QrcodeSupportedFormats.DATA_MATRIX,
+        ],
+      });
       scannerRef.current = scanner;
 
       await scanner.start(
