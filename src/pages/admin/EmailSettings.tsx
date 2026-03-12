@@ -245,9 +245,9 @@ export default function EmailSettings() {
             </Button>
           </div>
           {testResult && (
-            <div className={`mt-4 flex items-start gap-2 rounded-lg border p-3 ${testResult.success ? "border-green-500/30 bg-green-500/5" : "border-destructive/30 bg-destructive/5"}`}>
+            <div className={`mt-4 flex items-start gap-2 rounded-lg border p-3 ${testResult.success ? "border-primary/30 bg-primary/5" : "border-destructive/30 bg-destructive/5"}`}>
               {testResult.success ? (
-                <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
+                <CheckCircle2 className="h-5 w-5 text-primary shrink-0 mt-0.5" />
               ) : (
                 <XCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
               )}
