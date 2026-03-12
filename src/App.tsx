@@ -47,6 +47,8 @@ const AppRoutes = () => (
     <Route path="/" element={<LandingPage />} />
     <Route path="/auth" element={<Auth />} />
     <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+    {/* Redirect /recon-board to /command-center for convenience */}
+    <Route path="/recon-board" element={<Navigate to="/command-center" replace />} />
     <Route path="/command-center" element={<ProtectedRoute><CommandCenter /></ProtectedRoute>} />
     <Route path="/vehicles" element={<ProtectedRoute><Vehicles /></ProtectedRoute>} />
     <Route path="/approvals" element={<ProtectedRoute><Approvals /></ProtectedRoute>} />
