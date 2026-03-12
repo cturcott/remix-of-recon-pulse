@@ -145,10 +145,9 @@ export default function ImportSettings() {
   const [sampleRows, setSampleRows] = useState<string[][]>([]);
   const [sampleFile, setSampleFile] = useState<string>("");
   const [savingMapping, setSavingMapping] = useState(false);
-
-  // Preview state
-  const [previewing, setPreviewing] = useState(false);
-  const [previewResult, setPreviewResult] = useState<any>(null);
+  const [manualUploadFile, setManualUploadFile] = useState<File | null>(null);
+  const [manualUploadContent, setManualUploadContent] = useState<string>("");
+  const [manualImporting, setManualImporting] = useState(false);
 
   // Import state
   const [importing, setImporting] = useState(false);
