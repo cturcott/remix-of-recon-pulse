@@ -171,6 +171,91 @@ export type Database = {
           },
         ]
       }
+      repair_items: {
+        Row: {
+          actual_cost: number | null
+          approved_at: string | null
+          approved_by: string | null
+          category: string | null
+          created_at: string
+          created_by: string | null
+          dealership_id: string
+          denial_reason: string | null
+          denied_at: string | null
+          denied_by: string | null
+          description: string
+          estimated_cost: number | null
+          id: string
+          stage_id: string | null
+          status: string
+          updated_at: string
+          vehicle_id: string
+          vendor_name: string | null
+        }
+        Insert: {
+          actual_cost?: number | null
+          approved_at?: string | null
+          approved_by?: string | null
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          dealership_id: string
+          denial_reason?: string | null
+          denied_at?: string | null
+          denied_by?: string | null
+          description: string
+          estimated_cost?: number | null
+          id?: string
+          stage_id?: string | null
+          status?: string
+          updated_at?: string
+          vehicle_id: string
+          vendor_name?: string | null
+        }
+        Update: {
+          actual_cost?: number | null
+          approved_at?: string | null
+          approved_by?: string | null
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          dealership_id?: string
+          denial_reason?: string | null
+          denied_at?: string | null
+          denied_by?: string | null
+          description?: string
+          estimated_cost?: number | null
+          id?: string
+          stage_id?: string | null
+          status?: string
+          updated_at?: string
+          vehicle_id?: string
+          vendor_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "repair_items_dealership_id_fkey"
+            columns: ["dealership_id"]
+            isOneToOne: false
+            referencedRelation: "dealerships"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "repair_items_stage_id_fkey"
+            columns: ["stage_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_stages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "repair_items_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_dealership_assignments: {
         Row: {
           created_at: string
