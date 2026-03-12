@@ -260,6 +260,9 @@ export default function CommandCenter() {
     stages.find((s) => s.id === selectedStageId)?.name ?? "Queue";
 
   const totalInRecon = vehicles.length;
+  const getDays = (v: Vehicle) => Math.floor((Date.now() - new Date(v.created_at).getTime()) / (1000 * 60 * 60 * 24));
+  const avgDaysInRecon = totalInRecon > 0 ? Math.round(vehicles.reduce((sum, v) => sum + getDays(v), 0) / totalInRecon) : null;
+  const overdueCount = vehicles.filter((v) => getDays(v) > 10).length;
 
   // ─── Render ───
   return (

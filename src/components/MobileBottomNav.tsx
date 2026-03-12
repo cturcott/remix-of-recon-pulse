@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button";
 
 const tabs = [
   { label: "Board", icon: Kanban, path: "/command-center" },
-  { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
   { label: "Vehicles", icon: Car, path: "/vehicles" },
   { label: "Approvals", icon: FileText, path: "/approvals" },
 ];
