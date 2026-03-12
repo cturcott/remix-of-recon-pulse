@@ -14,6 +14,7 @@ const navItems = [
 const bottomNavItems = [
   { label: "Notifications", icon: Bell, path: "/notifications" },
   { label: "Team", icon: Users, path: "/team" },
+  { label: "Workflow", icon: Workflow, path: "/settings/workflow" },
   { label: "Settings", icon: Settings, path: "/settings" },
 ];
 
