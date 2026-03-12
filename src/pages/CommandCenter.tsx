@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import AppLayout from "@/components/AppLayout";
 import AddVehicleDialog from "@/components/AddVehicleDialog";
 import { supabase } from "@/integrations/supabase/client";
