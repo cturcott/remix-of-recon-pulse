@@ -35,11 +35,11 @@ export default function HeroSection() {
               Schedule a Demo <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
-              to="/command-center"
+              to="/auth"
               className="inline-flex items-center gap-2 rounded-lg border px-7 py-3.5 text-sm font-semibold transition-all hover:bg-[hsl(0,0%,100%)/0.1]"
               style={{ borderColor: "hsl(0, 0%, 100%, 0.2)", color: "hsl(0, 0%, 100%)" }}
             >
-              <Play className="h-4 w-4" /> See It In Action
+              Schedule Your Demo
             </Link>
           </div>
         </div>
