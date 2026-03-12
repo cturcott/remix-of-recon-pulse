@@ -329,9 +329,9 @@ export default function AddVehicleDialog() {
             </div>
           </div>
 
-          <div className="flex justify-end gap-2 pt-2">
-            <Button variant="outline" onClick={() => { resetForm(); setOpen(false); }}>Cancel</Button>
-            <Button onClick={handleSave} disabled={saving || !vin || !mileage}>
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-2">
+            <Button variant="outline" onClick={() => { resetForm(); setOpen(false); }} className="w-full sm:w-auto">Cancel</Button>
+            <Button onClick={handleSave} disabled={saving || !vin || !mileage} className="w-full sm:w-auto">
               {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
               Save & Enter Workflow
             </Button>
