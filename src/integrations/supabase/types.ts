@@ -118,6 +118,135 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_event_recipients: {
+        Row: {
+          bounce_type: string | null
+          created_at: string
+          delivered_at: string | null
+          delivery_status: string
+          id: string
+          notification_event_id: string
+          opened_at: string | null
+          recipient_email: string
+          recipient_name: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          bounce_type?: string | null
+          created_at?: string
+          delivered_at?: string | null
+          delivery_status?: string
+          id?: string
+          notification_event_id: string
+          opened_at?: string | null
+          recipient_email: string
+          recipient_name?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          bounce_type?: string | null
+          created_at?: string
+          delivered_at?: string | null
+          delivery_status?: string
+          id?: string
+          notification_event_id?: string
+          opened_at?: string | null
+          recipient_email?: string
+          recipient_name?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_event_recipients_notification_event_id_fkey"
+            columns: ["notification_event_id"]
+            isOneToOne: false
+            referencedRelation: "notification_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notification_events: {
+        Row: {
+          created_at: string
+          dealership_id: string
+          error_message: string | null
+          event_type: string
+          id: string
+          metadata_json: Json | null
+          provider: string | null
+          provider_message_id: string | null
+          status: string
+          tag: string | null
+          template_key: string | null
+          triggered_at: string
+          triggered_by_user_id: string | null
+          updated_at: string
+          vehicle_id: string
+          workflow_stage_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          dealership_id: string
+          error_message?: string | null
+          event_type?: string
+          id?: string
+          metadata_json?: Json | null
+          provider?: string | null
+          provider_message_id?: string | null
+          status?: string
+          tag?: string | null
+          template_key?: string | null
+          triggered_at?: string
+          triggered_by_user_id?: string | null
+          updated_at?: string
+          vehicle_id: string
+          workflow_stage_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          dealership_id?: string
+          error_message?: string | null
+          event_type?: string
+          id?: string
+          metadata_json?: Json | null
+          provider?: string | null
+          provider_message_id?: string | null
+          status?: string
+          tag?: string | null
+          template_key?: string | null
+          triggered_at?: string
+          triggered_by_user_id?: string | null
+          updated_at?: string
+          vehicle_id?: string
+          workflow_stage_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_events_dealership_id_fkey"
+            columns: ["dealership_id"]
+            isOneToOne: false
+            referencedRelation: "dealerships"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notification_events_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notification_events_workflow_stage_id_fkey"
+            columns: ["workflow_stage_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_stages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -252,6 +381,104 @@ export type Database = {
             columns: ["vehicle_id"]
             isOneToOne: false
             referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stage_notification_rule_recipients: {
+        Row: {
+          created_at: string
+          id: string
+          recipient_type: string
+          stage_notification_rule_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          recipient_type?: string
+          stage_notification_rule_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          recipient_type?: string
+          stage_notification_rule_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stage_notification_rule_recipie_stage_notification_rule_id_fkey"
+            columns: ["stage_notification_rule_id"]
+            isOneToOne: false
+            referencedRelation: "stage_notification_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stage_notification_rules: {
+        Row: {
+          created_at: string
+          dealership_id: string
+          escalation_after_minutes: number | null
+          escalation_enabled: boolean
+          id: string
+          notifications_enabled: boolean
+          reminder_after_minutes: number | null
+          reminder_enabled: boolean
+          template_key_escalation: string | null
+          template_key_reminder: string | null
+          template_key_stage_entry: string | null
+          updated_at: string
+          updated_by_user_id: string | null
+          workflow_stage_id: string
+        }
+        Insert: {
+          created_at?: string
+          dealership_id: string
+          escalation_after_minutes?: number | null
+          escalation_enabled?: boolean
+          id?: string
+          notifications_enabled?: boolean
+          reminder_after_minutes?: number | null
+          reminder_enabled?: boolean
+          template_key_escalation?: string | null
+          template_key_reminder?: string | null
+          template_key_stage_entry?: string | null
+          updated_at?: string
+          updated_by_user_id?: string | null
+          workflow_stage_id: string
+        }
+        Update: {
+          created_at?: string
+          dealership_id?: string
+          escalation_after_minutes?: number | null
+          escalation_enabled?: boolean
+          id?: string
+          notifications_enabled?: boolean
+          reminder_after_minutes?: number | null
+          reminder_enabled?: boolean
+          template_key_escalation?: string | null
+          template_key_reminder?: string | null
+          template_key_stage_entry?: string | null
+          updated_at?: string
+          updated_by_user_id?: string | null
+          workflow_stage_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stage_notification_rules_dealership_id_fkey"
+            columns: ["dealership_id"]
+            isOneToOne: false
+            referencedRelation: "dealerships"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stage_notification_rules_workflow_stage_id_fkey"
+            columns: ["workflow_stage_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_stages"
             referencedColumns: ["id"]
           },
         ]
