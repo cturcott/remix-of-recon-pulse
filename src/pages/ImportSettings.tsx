@@ -257,13 +257,13 @@ export default function ImportSettings() {
         .update({ is_active: false })
         .eq("import_config_id", config.id);
 
-      const { error } = await supabase.from("dealership_import_mappings").insert({
+      const { error } = await supabase.from("dealership_import_mappings").insert([{
         dealership_id: currentDealership.id,
         import_config_id: config.id,
         version_number: (activeMapping?.version_number || 0) + 1,
         is_active: true,
-        mapping_json: mappingRules,
-      });
+        mapping_json: mappingRules as unknown as import("@/integrations/supabase/types").Json,
+      }]);
       if (error) throw error;
 
       queryClient.invalidateQueries({ queryKey: ["import-mapping"] });
