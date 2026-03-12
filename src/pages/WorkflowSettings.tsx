@@ -292,6 +292,19 @@ export default function WorkflowSettings() {
                 className="flex-1 h-8"
                 disabled={!isDealershipAdmin}
               />
+              <div className="flex items-center gap-1.5 shrink-0">
+                <span className="text-xs text-muted-foreground hidden sm:inline">SLA</span>
+                <Input
+                  type="number"
+                  min={1}
+                  max={90}
+                  value={stage.sla_days}
+                  onChange={(e) => handleSLAChange(idx, e.target.value)}
+                  className="h-8 w-16 text-center text-xs"
+                  disabled={!isDealershipAdmin}
+                />
+                <span className="text-xs text-muted-foreground hidden sm:inline">days</span>
+              </div>
               <div className="flex items-center gap-2 shrink-0">
                 {stage.is_start_stage && <Badge variant="secondary" className="text-xs"><Lock className="h-3 w-3 mr-0.5" /> Start</Badge>}
                 {stage.is_completion_stage && <Badge variant="secondary" className="text-xs"><Lock className="h-3 w-3 mr-0.5" /> End</Badge>}
