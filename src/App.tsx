@@ -22,6 +22,7 @@ import ImportHistory from "./pages/ImportHistory";
 import ImportBatchDetail from "./pages/ImportBatchDetail";
 import ImportReviewQueue from "./pages/ImportReviewQueue";
 import Team from "./pages/Team";
+import Approvals from "./pages/Approvals";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
@@ -48,6 +49,7 @@ const AppRoutes = () => (
     <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
     <Route path="/command-center" element={<ProtectedRoute><CommandCenter /></ProtectedRoute>} />
     <Route path="/vehicles" element={<ProtectedRoute><Vehicles /></ProtectedRoute>} />
+    <Route path="/approvals" element={<ProtectedRoute><Approvals /></ProtectedRoute>} />
     <Route path="/vehicle/:id" element={<ProtectedRoute><VehicleDetail /></ProtectedRoute>} />
     <Route path="/settings/workflow" element={<ProtectedRoute><WorkflowSettings /></ProtectedRoute>} />
     <Route path="/settings/notifications" element={<ProtectedRoute><WorkflowNotifications /></ProtectedRoute>} />
