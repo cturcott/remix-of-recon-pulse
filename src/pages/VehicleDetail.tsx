@@ -518,6 +518,9 @@ export default function VehicleDetail() {
             )}
           </div>
 
+          {/* Notification History */}
+          <NotificationHistory vehicleId={id!} />
+
           {/* Notes */}
           {vehicle.notes && (
             <div className="rounded-xl border border-border bg-card p-5 mt-4">
