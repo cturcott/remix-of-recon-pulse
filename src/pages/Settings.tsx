@@ -106,7 +106,8 @@ export default function Settings() {
           zip: dealerZip || null,
           primary_contact_name: dealerContact || null,
           primary_contact_email: dealerEmail || null,
-        })
+          stage_sla_days: stageSLADays,
+        } as any)
         .eq("id", currentDealership.id);
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ["dealership-detail"] });
