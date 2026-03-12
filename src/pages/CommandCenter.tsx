@@ -64,6 +64,23 @@ export default function CommandCenter() {
   const [mobileContextOpen, setMobileContextOpen] = useState(false);
 
   // ─── Queries ───
+  const { data: dealershipDetail } = useQuery({
+    queryKey: ["dealership-detail", currentDealership?.id],
+    queryFn: async () => {
+      if (!currentDealership) return null;
+      const { data, error } = await supabase
+        .from("dealerships")
+        .select("stage_sla_days")
+        .eq("id", currentDealership.id)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!currentDealership,
+  });
+
+  const stageSLADays = (dealershipDetail as any)?.stage_sla_days ?? 5;
+
   const { data: stages = [] } = useQuery<WorkflowStage[]>({
     queryKey: ["workflow-stages", currentDealership?.id],
     queryFn: async () => {
@@ -91,6 +108,29 @@ export default function CommandCenter() {
         .eq("status", "in_recon");
       if (error) throw error;
       return data as Vehicle[];
+    },
+    enabled: !!currentDealership,
+  });
+
+  // Fetch latest stage entry timestamps for each vehicle
+  const { data: stageEntryMap = {} } = useQuery<Record<string, string>>({
+    queryKey: ["vehicle-stage-entries", currentDealership?.id],
+    queryFn: async () => {
+      if (!currentDealership) return {};
+      const { data, error } = await supabase
+        .from("vehicle_stage_history")
+        .select("vehicle_id, to_stage_id, changed_at")
+        .eq("dealership_id", currentDealership.id)
+        .order("changed_at", { ascending: false });
+      if (error) throw error;
+      // Keep the most recent entry per vehicle (first occurrence since sorted desc)
+      const map: Record<string, string> = {};
+      data.forEach((row: any) => {
+        if (!map[row.vehicle_id]) {
+          map[row.vehicle_id] = row.changed_at;
+        }
+      });
+      return map;
     },
     enabled: !!currentDealership,
   });
