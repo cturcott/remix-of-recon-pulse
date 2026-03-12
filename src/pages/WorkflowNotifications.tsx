@@ -13,7 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { Bell, Save, Users, Clock, AlertTriangle, Mail, Loader2, Settings2, CheckCircle2 } from "lucide-react";
+import { Bell, Save, Users, Clock, AlertTriangle, Loader2 } from "lucide-react";
 
 interface StageRule {
   id?: string;
@@ -36,34 +36,6 @@ export default function WorkflowNotifications() {
   const [rules, setRules] = useState<StageRule[]>([]);
   const [saving, setSaving] = useState(false);
 
-  // Email provider settings
-  const [fromEmail, setFromEmail] = useState("");
-  const [fromName, setFromName] = useState("Recon Pulse");
-  const [integrationEnabled, setIntegrationEnabled] = useState(false);
-  const [savingProvider, setSavingProvider] = useState(false);
-
-  // Get provider settings
-  const { data: providerSettings } = useQuery({
-    queryKey: ["email-provider-settings"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("email_provider_settings")
-        .select("*")
-        .eq("provider_name", "postmark")
-        .single();
-      if (error) throw error;
-      return data;
-    },
-    enabled: isPlatformAdmin,
-  });
-
-  useEffect(() => {
-    if (providerSettings) {
-      setFromEmail(providerSettings.from_email || "");
-      setFromName(providerSettings.from_name || "Recon Pulse");
-      setIntegrationEnabled(providerSettings.integration_enabled);
-    }
-  }, [providerSettings]);
 
   // Get stages
   const { data: stages = [] } = useQuery({
@@ -241,24 +213,6 @@ export default function WorkflowNotifications() {
     }
   };
 
-  const handleSaveProvider = async () => {
-    if (!providerSettings) return;
-    setSavingProvider(true);
-    try {
-      const { error } = await supabase.from("email_provider_settings").update({
-        from_email: fromEmail || null,
-        from_name: fromName || null,
-        integration_enabled: integrationEnabled,
-      }).eq("id", providerSettings.id);
-      if (error) throw error;
-      queryClient.invalidateQueries({ queryKey: ["email-provider-settings"] });
-      toast.success("Email provider settings saved");
-    } catch (err: any) {
-      toast.error(err.message);
-    } finally {
-      setSavingProvider(false);
-    }
-  };
 
   const [expandedStage, setExpandedStage] = useState<string | null>(null);
 
@@ -278,46 +232,6 @@ export default function WorkflowNotifications() {
       </div>
 
       <div className="max-w-4xl space-y-6">
-        {/* Email Provider Settings (Platform Admin Only) */}
-        {isPlatformAdmin && (
-          <section className="rounded-xl border border-border bg-card p-5">
-            <div className="flex items-center gap-2 mb-4">
-              <Mail className="h-5 w-5 text-primary" />
-              <h2 className="font-semibold text-foreground">Email Provider (Postmark)</h2>
-              <Badge variant={integrationEnabled ? "secondary" : "outline"} className="text-xs ml-auto">
-                {integrationEnabled ? "Enabled" : "Disabled"}
-              </Badge>
-            </div>
-            <p className="text-sm text-muted-foreground mb-4">
-              Configure your Postmark sender details. The server token should be added as a secret named <code className="text-xs bg-muted px-1 py-0.5 rounded">POSTMARK_SERVER_TOKEN</code> in your backend settings.
-            </p>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label>From Email</Label>
-                <Input
-                  value={fromEmail}
-                  onChange={(e) => setFromEmail(e.target.value)}
-                  placeholder="notifications@yourdomain.com"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label>From Name</Label>
-                <Input value={fromName} onChange={(e) => setFromName(e.target.value)} placeholder="Recon Pulse" />
-              </div>
-            </div>
-            <div className="flex items-center justify-between mt-4">
-              <div className="flex items-center gap-2">
-                <Switch checked={integrationEnabled} onCheckedChange={setIntegrationEnabled} />
-                <Label className="text-sm">Enable email notifications</Label>
-              </div>
-              <Button size="sm" variant="outline" onClick={handleSaveProvider} disabled={savingProvider}>
-                {savingProvider ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Settings2 className="h-4 w-4 mr-1" />}
-                Save Provider Settings
-              </Button>
-            </div>
-          </section>
-        )}
-
         {/* Stage Rules */}
         <section>
           <h2 className="font-semibold text-foreground mb-3 flex items-center gap-2">
