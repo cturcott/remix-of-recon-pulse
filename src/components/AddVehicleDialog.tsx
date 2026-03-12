@@ -284,7 +284,7 @@ export default function AddVehicleDialog() {
           {/* Intake Fields */}
           <div className="border-t border-border pt-4">
             <p className="text-sm font-medium text-foreground mb-3">Intake Details</p>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label htmlFor="mileage">Mileage *</Label>
                 <Input id="mileage" type="number" value={mileage} onChange={(e) => setMileage(e.target.value)} placeholder="45000" />
