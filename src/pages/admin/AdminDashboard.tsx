@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import AppLayout from "@/components/AppLayout";
 import StatCard from "@/components/StatCard";
-import { Building2, Users, CheckCircle, AlertTriangle } from "lucide-react";
+import { Building2, Users, CheckCircle, AlertTriangle, Mail } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
