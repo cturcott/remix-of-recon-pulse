@@ -218,6 +218,7 @@ export default function AddVehicleDialog() {
                 maxLength={17}
                 className="font-mono tracking-wider"
               />
+              <VinScanner onScan={(scannedVin) => { setVin(scannedVin); setDecodeStatus("idle"); }} />
               <Button
                 type="button"
                 variant="secondary"
