@@ -66,23 +66,6 @@ export default function CommandCenter() {
   const [mobileContextOpen, setMobileContextOpen] = useState(false);
 
   // ─── Queries ───
-  const { data: dealershipDetail } = useQuery({
-    queryKey: ["dealership-detail", currentDealership?.id],
-    queryFn: async () => {
-      if (!currentDealership) return null;
-      const { data, error } = await supabase
-        .from("dealerships")
-        .select("stage_sla_days")
-        .eq("id", currentDealership.id)
-        .single();
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!currentDealership,
-  });
-
-  const stageSLADays = (dealershipDetail as any)?.stage_sla_days ?? 5;
-
   const { data: stages = [] } = useQuery<WorkflowStage[]>({
     queryKey: ["workflow-stages", currentDealership?.id],
     queryFn: async () => {
@@ -94,7 +77,7 @@ export default function CommandCenter() {
         .eq("is_active", true)
         .order("sort_order");
       if (error) throw error;
-      return data;
+      return (data as any[]).map((s) => ({ ...s, sla_days: s.sla_days ?? 5 })) as WorkflowStage[];
     },
     enabled: !!currentDealership,
   });
