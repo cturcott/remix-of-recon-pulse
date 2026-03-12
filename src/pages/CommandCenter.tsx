@@ -265,23 +265,32 @@ export default function CommandCenter() {
   return (
     <AppLayout>
       <div className="flex flex-col h-[calc(100vh-3.5rem)] -m-4 sm:-m-6 lg:-m-8 -mt-4 sm:-mt-6 lg:-mt-8">
-        {/* Top bar: KPI summary + controls */}
-        <div className="flex items-center justify-between border-b border-border px-4 py-2.5 bg-card shrink-0">
-          <div className="flex items-center gap-4">
-            <h1 className="text-lg font-bold text-foreground hidden sm:block">
+        {/* Top bar: KPI metrics + add vehicle */}
+        <div className="flex items-center justify-between border-b border-border px-4 py-2 bg-card shrink-0 gap-2 overflow-x-auto">
+          <div className="flex items-center gap-3 sm:gap-4 shrink-0">
+            <h1 className="text-lg font-bold text-foreground hidden lg:block">
               Recon Board
             </h1>
-            <div className="flex items-center gap-3 text-xs text-muted-foreground">
-              <span className="font-semibold text-foreground">{totalInRecon}</span> in
-              recon
-              <span className="text-border">|</span>
-              <span className="font-semibold text-destructive">
-                {stagesWithCounts.reduce((s, st) => s + st.dangerCount, 0)}
-              </span>{" "}
-              overdue
+            {/* Inline KPI chips */}
+            <div className="flex items-center gap-2 text-xs">
+              <span className="flex items-center gap-1.5 rounded-md bg-muted px-2.5 py-1.5 font-medium text-foreground">
+                <Car className="h-3.5 w-3.5 text-primary" />
+                <span className="font-bold">{totalInRecon}</span>
+                <span className="text-muted-foreground hidden sm:inline">in recon</span>
+              </span>
+              <span className="flex items-center gap-1.5 rounded-md bg-muted px-2.5 py-1.5 font-medium text-foreground">
+                <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                <span className="font-bold">{avgDaysInRecon ?? "—"}</span>
+                <span className="text-muted-foreground hidden sm:inline">avg days</span>
+              </span>
+              <span className="flex items-center gap-1.5 rounded-md bg-destructive/10 px-2.5 py-1.5 font-medium text-destructive">
+                <AlertTriangle className="h-3.5 w-3.5" />
+                <span className="font-bold">{overdueCount}</span>
+                <span className="hidden sm:inline">overdue</span>
+              </span>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <AddVehicleDialog />
           </div>
         </div>
