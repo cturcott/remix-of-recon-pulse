@@ -71,41 +71,13 @@ export default function AppTopNav() {
             </Link>
           ))}
 
-          {/* Data dropdown */}
+          {/* Manage dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
                 className={cn(
                   "flex items-center gap-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
-                  isInGroup(dataMenuItems)
-                    ? "bg-accent text-accent-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                )}
-              >
-                <Upload className="h-4 w-4" />
-                Import
-                <ChevronDown className="h-3 w-3 ml-0.5" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-48">
-              {dataMenuItems.map((item) => (
-                <DropdownMenuItem key={item.path} asChild>
-                  <Link to={item.path} className="flex items-center gap-2">
-                    <item.icon className="h-4 w-4" />
-                    {item.label}
-                  </Link>
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {/* Settings dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                className={cn(
-                  "flex items-center gap-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
-                  isInGroup(settingsMenuItems)
+                  isInGroup(manageMenuItems)
                     ? "bg-accent text-accent-foreground"
                     : "text-muted-foreground hover:text-foreground hover:bg-muted"
                 )}
@@ -116,7 +88,7 @@ export default function AppTopNav() {
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-48">
-              {settingsMenuItems.map((item) => (
+              {manageMenuItems.map((item) => (
                 <DropdownMenuItem key={item.path} asChild>
                   <Link to={item.path} className="flex items-center gap-2">
                     <item.icon className="h-4 w-4" />
