@@ -200,7 +200,7 @@ export default function AddVehicleDialog() {
           Add Vehicle
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto sm:max-h-[90vh] max-sm:h-full max-sm:max-h-full max-sm:rounded-none max-sm:border-0">
         <DialogHeader>
           <DialogTitle>Add Vehicle to Recon</DialogTitle>
         </DialogHeader>
