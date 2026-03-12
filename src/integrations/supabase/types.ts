@@ -118,6 +118,39 @@ export type Database = {
         }
         Relationships: []
       }
+      email_provider_settings: {
+        Row: {
+          created_at: string
+          from_email: string | null
+          from_name: string | null
+          id: string
+          integration_enabled: boolean
+          message_stream: string | null
+          provider_name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          from_email?: string | null
+          from_name?: string | null
+          id?: string
+          integration_enabled?: boolean
+          message_stream?: string | null
+          provider_name?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          from_email?: string | null
+          from_name?: string | null
+          id?: string
+          integration_enabled?: boolean
+          message_stream?: string | null
+          provider_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       notification_event_recipients: {
         Row: {
           bounce_type: string | null
