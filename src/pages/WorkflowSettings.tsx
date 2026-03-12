@@ -191,7 +191,8 @@ export default function WorkflowSettings() {
             is_required: stage.is_required,
             is_start_stage: stage.is_start_stage,
             is_completion_stage: stage.is_completion_stage,
-          });
+            sla_days: stage.sla_days,
+          } as any);
         } else {
           await supabase.from("workflow_stages").update({
             name: stage.name,
