@@ -22,6 +22,7 @@ import ImportHistory from "./pages/ImportHistory";
 import ImportBatchDetail from "./pages/ImportBatchDetail";
 import ImportReviewQueue from "./pages/ImportReviewQueue";
 import Team from "./pages/Team";
+import Approvals from "./pages/Approvals";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
