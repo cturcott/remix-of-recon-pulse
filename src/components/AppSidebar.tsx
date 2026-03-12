@@ -1,5 +1,6 @@
 import { Car, LayoutDashboard, Kanban, FileText, Settings, Users, TruckIcon, BarChart3, Bell, Package, Workflow } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
@@ -20,7 +21,8 @@ const bottomNavItems = [
 
 export default function AppSidebar() {
   const location = useLocation();
-
+  const { profile } = useAuth();
+  const initials = `${profile?.first_name?.[0] ?? ""}${profile?.last_name?.[0] ?? ""}`.toUpperCase() || "??";
   return (
     <aside className="fixed left-0 top-0 z-40 flex h-screen w-64 flex-col bg-sidebar border-r border-sidebar-border shadow-sm">
       {/* Logo */}
@@ -80,11 +82,11 @@ export default function AppSidebar() {
       <div className="border-t border-sidebar-border p-4">
         <div className="flex items-center gap-3">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-sidebar-accent text-xs font-semibold text-sidebar-accent-foreground">
-            JD
+            {initials}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-sidebar-accent-foreground truncate">John Davis</p>
-            <p className="text-xs text-muted-foreground truncate">Used Car Manager</p>
+            <p className="text-sm font-medium text-sidebar-accent-foreground truncate">{profile?.first_name} {profile?.last_name}</p>
+            <p className="text-xs text-muted-foreground truncate">{profile?.title || profile?.email}</p>
           </div>
         </div>
       </div>
