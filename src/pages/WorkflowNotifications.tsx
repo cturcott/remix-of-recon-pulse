@@ -36,34 +36,6 @@ export default function WorkflowNotifications() {
   const [rules, setRules] = useState<StageRule[]>([]);
   const [saving, setSaving] = useState(false);
 
-  // Email provider settings
-  const [fromEmail, setFromEmail] = useState("");
-  const [fromName, setFromName] = useState("Recon Pulse");
-  const [integrationEnabled, setIntegrationEnabled] = useState(false);
-  const [savingProvider, setSavingProvider] = useState(false);
-
-  // Get provider settings
-  const { data: providerSettings } = useQuery({
-    queryKey: ["email-provider-settings"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("email_provider_settings")
-        .select("*")
-        .eq("provider_name", "postmark")
-        .single();
-      if (error) throw error;
-      return data;
-    },
-    enabled: isPlatformAdmin,
-  });
-
-  useEffect(() => {
-    if (providerSettings) {
-      setFromEmail(providerSettings.from_email || "");
-      setFromName(providerSettings.from_name || "Recon Pulse");
-      setIntegrationEnabled(providerSettings.integration_enabled);
-    }
-  }, [providerSettings]);
 
   // Get stages
   const { data: stages = [] } = useQuery({
