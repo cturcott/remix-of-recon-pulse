@@ -402,7 +402,7 @@ export default function ImportSettings() {
           csv_content: manualUploadContent,
           file_name: manualUploadFile?.name || "manual-upload.csv",
           mapping_id: mappingToUse.id,
-          config_id: config.id,
+          config_id: configToUse.id,
           preview_only: false,
         },
       });
