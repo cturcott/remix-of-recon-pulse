@@ -318,7 +318,7 @@ export default function AddVehicleDialog() {
                 <Label htmlFor="acv">ACV / Acquisition Cost</Label>
                 <Input id="acv" type="number" value={acv} onChange={(e) => setAcv(e.target.value)} placeholder="15000" />
               </div>
-              <div className="space-y-1.5 col-span-2">
+              <div className="space-y-1.5 sm:col-span-2">
                 <Label htmlFor="lot">Lot Location</Label>
                 <Input id="lot" value={lotLocation} onChange={(e) => setLotLocation(e.target.value)} placeholder="Main lot, Row B" />
               </div>
