@@ -46,6 +46,7 @@ interface WorkflowStage {
   is_active: boolean;
   is_start_stage: boolean;
   is_completion_stage: boolean;
+  sla_days: number;
 }
 
 type SortOption = "oldest" | "newest" | "stock";
@@ -64,23 +65,6 @@ export default function CommandCenter() {
   const [mobileContextOpen, setMobileContextOpen] = useState(false);
 
   // ─── Queries ───
-  const { data: dealershipDetail } = useQuery({
-    queryKey: ["dealership-detail", currentDealership?.id],
-    queryFn: async () => {
-      if (!currentDealership) return null;
-      const { data, error } = await supabase
-        .from("dealerships")
-        .select("stage_sla_days")
-        .eq("id", currentDealership.id)
-        .single();
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!currentDealership,
-  });
-
-  const stageSLADays = (dealershipDetail as any)?.stage_sla_days ?? 5;
-
   const { data: stages = [] } = useQuery<WorkflowStage[]>({
     queryKey: ["workflow-stages", currentDealership?.id],
     queryFn: async () => {
@@ -92,7 +76,7 @@ export default function CommandCenter() {
         .eq("is_active", true)
         .order("sort_order");
       if (error) throw error;
-      return data;
+      return (data as any[]).map((s) => ({ ...s, sla_days: s.sla_days ?? 5 })) as WorkflowStage[];
     },
     enabled: !!currentDealership,
   });
@@ -237,8 +221,9 @@ export default function CommandCenter() {
         const stageVehicles = vehicles.filter(
           (v) => v.current_stage_id === stage.id
         );
+        const sla = stage.sla_days;
         const overdueInStage = stageVehicles.filter(
-          (v) => getStageAgingDays(v.id, v.created_at) >= stageSLADays
+          (v) => getStageAgingDays(v.id, v.created_at) >= sla
         ).length;
         return {
           ...stage,
@@ -246,13 +231,13 @@ export default function CommandCenter() {
           warningCount: stageVehicles.filter(
             (v) => {
               const d = getStageAgingDays(v.id, v.created_at);
-              return d >= stageSLADays * 0.7 && d < stageSLADays;
+              return d >= sla * 0.7 && d < sla;
             }
           ).length,
           dangerCount: overdueInStage,
         };
       }),
-    [stages, vehicles, stageEntryMap, stageSLADays]
+    [stages, vehicles, stageEntryMap]
   );
 
   const currentStageVehicles = useMemo(() => {

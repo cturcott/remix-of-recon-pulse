@@ -22,6 +22,7 @@ interface WorkflowStage {
   is_required: boolean;
   is_start_stage: boolean;
   is_completion_stage: boolean;
+  sla_days: number;
 }
 
 const DEFAULT_STAGES = [
@@ -86,6 +87,13 @@ export default function WorkflowSettings() {
     setHasChanges(true);
   };
 
+  const handleSLAChange = (idx: number, value: string) => {
+    const updated = [...stages];
+    updated[idx] = { ...updated[idx], sla_days: Math.max(1, parseInt(value) || 1) };
+    setStages(updated);
+    setHasChanges(true);
+  };
+
   const handleAddStage = () => {
     const maxOrder = stages.length > 0 ? Math.max(...stages.map((s) => s.sort_order)) : 0;
     // Insert before completion stage
@@ -105,6 +113,7 @@ export default function WorkflowSettings() {
       is_required: false,
       is_start_stage: false,
       is_completion_stage: false,
+      sla_days: 5,
     });
     updated.sort((a, b) => a.sort_order - b.sort_order);
     setStages(updated);
@@ -182,14 +191,16 @@ export default function WorkflowSettings() {
             is_required: stage.is_required,
             is_start_stage: stage.is_start_stage,
             is_completion_stage: stage.is_completion_stage,
-          });
+            sla_days: stage.sla_days,
+          } as any);
         } else {
           await supabase.from("workflow_stages").update({
             name: stage.name,
             sort_order: stage.sort_order,
             is_active: stage.is_active,
             is_required: stage.is_required,
-          }).eq("id", stage.id);
+            sla_days: stage.sla_days,
+          } as any).eq("id", stage.id);
         }
       }
 
@@ -281,6 +292,19 @@ export default function WorkflowSettings() {
                 className="flex-1 h-8"
                 disabled={!isDealershipAdmin}
               />
+              <div className="flex items-center gap-1.5 shrink-0">
+                <span className="text-xs text-muted-foreground hidden sm:inline">SLA</span>
+                <Input
+                  type="number"
+                  min={1}
+                  max={90}
+                  value={stage.sla_days}
+                  onChange={(e) => handleSLAChange(idx, e.target.value)}
+                  className="h-8 w-16 text-center text-xs"
+                  disabled={!isDealershipAdmin}
+                />
+                <span className="text-xs text-muted-foreground hidden sm:inline">days</span>
+              </div>
               <div className="flex items-center gap-2 shrink-0">
                 {stage.is_start_stage && <Badge variant="secondary" className="text-xs"><Lock className="h-3 w-3 mr-0.5" /> Start</Badge>}
                 {stage.is_completion_stage && <Badge variant="secondary" className="text-xs"><Lock className="h-3 w-3 mr-0.5" /> End</Badge>}
