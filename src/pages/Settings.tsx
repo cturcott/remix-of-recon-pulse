@@ -65,6 +65,7 @@ export default function Settings() {
       setDealerZip(dealership.zip ?? "");
       setDealerContact(dealership.primary_contact_name ?? "");
       setDealerEmail(dealership.primary_contact_email ?? "");
+      setStageSLADays((dealership as any).stage_sla_days ?? 5);
     }
   });
 
