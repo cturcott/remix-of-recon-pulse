@@ -18,12 +18,9 @@ const primaryLinks = [
   { label: "Approvals", icon: FileText, path: "/approvals" },
 ];
 
-const dataMenuItems = [
+const manageMenuItems = [
   { label: "CSV Import", icon: Upload, path: "/import/settings" },
   { label: "Import History", icon: BarChart3, path: "/import/history" },
-];
-
-const settingsMenuItems = [
   { label: "Workflow Stages", icon: Workflow, path: "/settings/workflow" },
   { label: "Notifications", icon: Bell, path: "/settings/notifications" },
   { label: "Team", icon: Users, path: "/team" },
