@@ -13,6 +13,7 @@ import VehicleDetail from "./pages/VehicleDetail";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import DealershipManagement from "./pages/admin/DealershipManagement";
 import UserManagement from "./pages/admin/UserManagement";
+import WorkflowSettings from "./pages/WorkflowSettings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
