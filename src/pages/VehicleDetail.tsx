@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AppLayout from "@/components/AppLayout";
 import { supabase } from "@/integrations/supabase/client";
+import NotificationHistory from "@/components/NotificationHistory";
 import { useDealership } from "@/contexts/DealershipContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
