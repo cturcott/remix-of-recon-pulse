@@ -213,24 +213,6 @@ export default function WorkflowNotifications() {
     }
   };
 
-  const handleSaveProvider = async () => {
-    if (!providerSettings) return;
-    setSavingProvider(true);
-    try {
-      const { error } = await supabase.from("email_provider_settings").update({
-        from_email: fromEmail || null,
-        from_name: fromName || null,
-        integration_enabled: integrationEnabled,
-      }).eq("id", providerSettings.id);
-      if (error) throw error;
-      queryClient.invalidateQueries({ queryKey: ["email-provider-settings"] });
-      toast.success("Email provider settings saved");
-    } catch (err: any) {
-      toast.error(err.message);
-    } finally {
-      setSavingProvider(false);
-    }
-  };
 
   const [expandedStage, setExpandedStage] = useState<string | null>(null);
 
