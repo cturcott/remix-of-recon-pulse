@@ -200,7 +200,7 @@ export default function AddVehicleDialog() {
           Add Vehicle
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto sm:max-h-[90vh] max-sm:h-full max-sm:max-h-full max-sm:rounded-none max-sm:border-0">
         <DialogHeader>
           <DialogTitle>Add Vehicle to Recon</DialogTitle>
         </DialogHeader>
@@ -246,7 +246,7 @@ export default function AddVehicleDialog() {
           </div>
 
           {/* Vehicle Details Grid */}
-          <div className="grid grid-cols-2 gap-3">
+           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="year">Year</Label>
               <Input id="year" value={year} onChange={(e) => setYear(e.target.value)} placeholder="2024" />
@@ -284,7 +284,7 @@ export default function AddVehicleDialog() {
           {/* Intake Fields */}
           <div className="border-t border-border pt-4">
             <p className="text-sm font-medium text-foreground mb-3">Intake Details</p>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label htmlFor="mileage">Mileage *</Label>
                 <Input id="mileage" type="number" value={mileage} onChange={(e) => setMileage(e.target.value)} placeholder="45000" />
@@ -318,20 +318,20 @@ export default function AddVehicleDialog() {
                 <Label htmlFor="acv">ACV / Acquisition Cost</Label>
                 <Input id="acv" type="number" value={acv} onChange={(e) => setAcv(e.target.value)} placeholder="15000" />
               </div>
-              <div className="space-y-1.5 col-span-2">
+              <div className="space-y-1.5 sm:col-span-2">
                 <Label htmlFor="lot">Lot Location</Label>
                 <Input id="lot" value={lotLocation} onChange={(e) => setLotLocation(e.target.value)} placeholder="Main lot, Row B" />
               </div>
-              <div className="space-y-1.5 col-span-2">
+              <div className="space-y-1.5 sm:col-span-2">
                 <Label htmlFor="notes">Notes</Label>
                 <Textarea id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Any intake notes..." rows={2} />
               </div>
             </div>
           </div>
 
-          <div className="flex justify-end gap-2 pt-2">
-            <Button variant="outline" onClick={() => { resetForm(); setOpen(false); }}>Cancel</Button>
-            <Button onClick={handleSave} disabled={saving || !vin || !mileage}>
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-2">
+            <Button variant="outline" onClick={() => { resetForm(); setOpen(false); }} className="w-full sm:w-auto">Cancel</Button>
+            <Button onClick={handleSave} disabled={saving || !vin || !mileage} className="w-full sm:w-auto">
               {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
               Save & Enter Workflow
             </Button>
