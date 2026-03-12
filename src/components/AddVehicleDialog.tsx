@@ -246,7 +246,7 @@ export default function AddVehicleDialog() {
           </div>
 
           {/* Vehicle Details Grid */}
-          <div className="grid grid-cols-2 gap-3">
+           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="year">Year</Label>
               <Input id="year" value={year} onChange={(e) => setYear(e.target.value)} placeholder="2024" />
