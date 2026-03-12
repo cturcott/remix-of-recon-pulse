@@ -221,8 +221,9 @@ export default function CommandCenter() {
         const stageVehicles = vehicles.filter(
           (v) => v.current_stage_id === stage.id
         );
+        const sla = stage.sla_days;
         const overdueInStage = stageVehicles.filter(
-          (v) => getStageAgingDays(v.id, v.created_at) >= stageSLADays
+          (v) => getStageAgingDays(v.id, v.created_at) >= sla
         ).length;
         return {
           ...stage,
@@ -230,13 +231,13 @@ export default function CommandCenter() {
           warningCount: stageVehicles.filter(
             (v) => {
               const d = getStageAgingDays(v.id, v.created_at);
-              return d >= stageSLADays * 0.7 && d < stageSLADays;
+              return d >= sla * 0.7 && d < sla;
             }
           ).length,
           dangerCount: overdueInStage,
         };
       }),
-    [stages, vehicles, stageEntryMap, stageSLADays]
+    [stages, vehicles, stageEntryMap]
   );
 
   const currentStageVehicles = useMemo(() => {
