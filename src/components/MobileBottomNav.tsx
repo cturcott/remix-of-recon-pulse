@@ -1,4 +1,4 @@
-import { LayoutDashboard, Car, Kanban, FileText, Menu } from "lucide-react";
+import { Car, Kanban, FileText, Menu } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
