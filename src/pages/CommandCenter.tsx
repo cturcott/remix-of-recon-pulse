@@ -149,7 +149,8 @@ export default function CommandCenter() {
                       key={v.id}
                       draggable
                       onDragStart={() => setDragVehicle(v.id)}
-                      className="rounded-lg border border-border bg-card p-3 cursor-grab hover:shadow-md transition-shadow"
+                      onClick={() => navigate(`/vehicle/${v.id}`)}
+                      className="rounded-lg border border-border bg-card p-3 cursor-grab hover:shadow-md hover:border-primary/40 transition-all"
                     >
                       <div className="flex items-start justify-between mb-1">
                         <p className="text-sm font-semibold text-card-foreground">
