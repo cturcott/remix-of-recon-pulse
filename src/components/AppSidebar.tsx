@@ -1,5 +1,6 @@
 import { Car, LayoutDashboard, Kanban, FileText, Settings, Users, TruckIcon, BarChart3, Bell, Package, Workflow } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
