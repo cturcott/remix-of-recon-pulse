@@ -70,6 +70,7 @@ export default function ImportSettings() {
   const queryClient = useQueryClient();
   const isDealershipAdmin = isPlatformAdmin || roles.includes("dealership_admin");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const importFileRef = useRef<HTMLInputElement>(null);
 
   // Config query
   const { data: config, isLoading: configLoading } = useQuery({
@@ -144,6 +145,9 @@ export default function ImportSettings() {
   const [sampleRows, setSampleRows] = useState<string[][]>([]);
   const [sampleFile, setSampleFile] = useState<string>("");
   const [savingMapping, setSavingMapping] = useState(false);
+  const [manualUploadFile, setManualUploadFile] = useState<File | null>(null);
+  const [manualUploadContent, setManualUploadContent] = useState<string>("");
+  const [manualImporting, setManualImporting] = useState(false);
 
   // Preview state
   const [previewing, setPreviewing] = useState(false);
@@ -152,6 +156,49 @@ export default function ImportSettings() {
   // Import state
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<any>(null);
+
+  const handleManualFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setManualUploadFile(file);
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setManualUploadContent(ev.target?.result as string);
+    };
+    reader.readAsText(file);
+  };
+
+  const handleManualImport = async () => {
+    if (!manualUploadContent || !config || !activeMapping || !currentDealership) {
+      toast.error("Select a CSV file and ensure mapping is configured");
+      return;
+    }
+    setManualImporting(true);
+    setImportResult(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("process-csv-import", {
+        body: {
+          dealership_id: currentDealership.id,
+          csv_content: manualUploadContent,
+          file_name: manualUploadFile?.name || "manual-upload.csv",
+          mapping_id: activeMapping.id,
+          config_id: config.id,
+          preview_only: false,
+        },
+      });
+      if (error) throw error;
+      setImportResult(data);
+      setManualUploadFile(null);
+      setManualUploadContent("");
+      if (importFileRef.current) importFileRef.current.value = "";
+      queryClient.invalidateQueries({ queryKey: ["vehicles"] });
+      toast.success(`Import complete: ${data.success_rows} vehicles created`);
+    } catch (err: any) {
+      toast.error(err.message || "Import failed");
+    } finally {
+      setManualImporting(false);
+    }
+  };
 
   // Column options with letters
   const columnOptions = useMemo(() => {
@@ -600,6 +647,61 @@ export default function ImportSettings() {
               Save Configuration
             </Button>
           </div>
+        </section>
+
+        {/* Manual CSV Upload */}
+        <section className="rounded-xl border border-border bg-card p-6">
+          <div className="flex items-center gap-2 mb-1">
+            <Upload className="h-5 w-5 text-primary" />
+            <h2 className="text-lg font-semibold text-foreground">Manual CSV Upload</h2>
+          </div>
+          <p className="text-sm text-muted-foreground mb-4">
+            Upload a CSV inventory file directly to import vehicles. Requires a saved column mapping.
+          </p>
+
+          {!activeMapping ? (
+            <div className="rounded-lg border border-dashed border-muted-foreground/30 bg-muted/20 p-5 text-center">
+              <FileUp className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
+              <p className="text-sm text-muted-foreground">
+                Configure and save a column mapping below before uploading inventory files.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="rounded-lg border border-dashed border-border bg-muted/30 p-4">
+                <div className="flex items-center gap-3">
+                  <FileSpreadsheet className="h-5 w-5 text-muted-foreground shrink-0" />
+                  <div className="flex-1">
+                    <Label className="text-sm font-medium">Select CSV File</Label>
+                    <p className="text-xs text-muted-foreground">
+                      Using mapping v{activeMapping.version_number} · Delimiter: "{config?.delimiter || ","}" · {config?.has_header_row ? "Header row" : "No header"}
+                    </p>
+                  </div>
+                  <Input
+                    type="file"
+                    accept=".csv,.txt"
+                    onChange={handleManualFileSelect}
+                    ref={importFileRef}
+                    className="max-w-64"
+                  />
+                </div>
+              </div>
+
+              {manualUploadFile && (
+                <div className="flex items-center justify-between rounded-lg border border-primary/20 bg-primary/5 px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <FileSpreadsheet className="h-4 w-4 text-primary" />
+                    <span className="text-sm font-medium text-foreground">{manualUploadFile.name}</span>
+                    <span className="text-xs text-muted-foreground">({(manualUploadFile.size / 1024).toFixed(1)} KB)</span>
+                  </div>
+                  <Button onClick={handleManualImport} disabled={manualImporting} size="sm">
+                    {manualImporting ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Play className="h-4 w-4 mr-1" />}
+                    Import Now
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
         </section>
 
         {/* Column Mapping */}
