@@ -38,7 +38,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 function AdminRoute({ children }: { children: React.ReactNode }) {
   const { isPlatformAdmin, loading } = useAuth();
   if (loading) return <div className="min-h-screen bg-background flex items-center justify-center text-muted-foreground">Loading...</div>;
-  if (!isPlatformAdmin) return <Navigate to="/dashboard" replace />;
+  if (!isPlatformAdmin) return <Navigate to="/command-center" replace />;
   return <>{children}</>;
 }
 
