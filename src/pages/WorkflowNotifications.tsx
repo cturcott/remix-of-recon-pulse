@@ -13,7 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { Bell, Save, Users, Clock, AlertTriangle, Mail, Loader2, Settings2, CheckCircle2 } from "lucide-react";
+import { Bell, Save, Users, Clock, AlertTriangle, Loader2 } from "lucide-react";
 
 interface StageRule {
   id?: string;
