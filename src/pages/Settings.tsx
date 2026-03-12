@@ -229,6 +229,16 @@ export default function Settings() {
               <Badge variant="outline">Configure</Badge>
             </Link>
             <Link
+              to="/settings/notifications"
+              className="flex items-center justify-between rounded-lg border border-border p-4 hover:bg-muted/50 transition-colors"
+            >
+              <div>
+                <p className="font-medium text-foreground">Workflow Notifications</p>
+                <p className="text-sm text-muted-foreground">Configure who gets notified when vehicles move through stages</p>
+              </div>
+              <Badge variant="outline">Configure</Badge>
+            </Link>
+            <Link
               to="/team"
               className="flex items-center justify-between rounded-lg border border-border p-4 hover:bg-muted/50 transition-colors"
             >
