@@ -70,6 +70,7 @@ export default function ImportSettings() {
   const queryClient = useQueryClient();
   const isDealershipAdmin = isPlatformAdmin || roles.includes("dealership_admin");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const importFileRef = useRef<HTMLInputElement>(null);
 
   // Config query
   const { data: config, isLoading: configLoading } = useQuery({
