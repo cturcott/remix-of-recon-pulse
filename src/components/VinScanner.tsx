@@ -32,6 +32,7 @@ export default function VinScanner({ onScan }: VinScannerProps) {
           Html5QrcodeSupportedFormats.QR_CODE,
           Html5QrcodeSupportedFormats.DATA_MATRIX,
         ],
+        verbose: false,
       });
       scannerRef.current = scanner;
 
