@@ -206,50 +206,7 @@ export default function ImportSettings() {
     }
   };
 
-  const handleSampleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const text = ev.target?.result as string;
-      setSampleFile(text);
-      // Parse headers
-      const firstLine = text.split(/\r?\n/)[0];
-      if (firstLine) {
-        const del = delimiter || ",";
-        const headers = firstLine.split(del).map(h => h.replace(/^["']|["']$/g, "").trim());
-        setSampleHeaders(headers);
-        // Auto-create mapping rules for detected headers if empty
-        if (mappingRules.length === 0) {
-          const autoMapped: MappingRule[] = headers.map(h => {
-            const lower = h.toLowerCase().replace(/[^a-z0-9]/g, "_");
-            const match = RECON_FIELDS.find(f =>
-              f.value === lower ||
-              lower.includes(f.value) ||
-              (f.value === "vin" && lower.includes("vin")) ||
-              (f.value === "stock_number" && (lower.includes("stock") || lower.includes("stk"))) ||
-              (f.value === "mileage" && (lower.includes("mile") || lower.includes("odometer"))) ||
-              (f.value === "year" && lower.includes("year")) ||
-              (f.value === "make" && lower.includes("make")) ||
-              (f.value === "model" && lower.includes("model")) ||
-              (f.value === "exterior_color" && lower.includes("color"))
-            );
-            return {
-              source_column: h,
-              target_field: match?.value || "",
-              default_value: "",
-              transform: f.value === "vin" ? "uppercase" : "trim",
-            };
-
-            // Fix: use RECON_FIELDS reference correctly
-            function get f() { return RECON_FIELDS.find(rf => rf.value === match?.value); }
-          });
-          setMappingRules(autoMapped);
-        }
-      }
-    };
-    reader.readAsText(file);
-  };
+  const handleSampleUploadOld = null; // removed
 
   // Fix the auto-mapping - simpler version
   const handleSampleUploadFixed = (e: React.ChangeEvent<HTMLInputElement>) => {
