@@ -15,6 +15,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import DealershipManagement from "./pages/admin/DealershipManagement";
 import UserManagement from "./pages/admin/UserManagement";
 import WorkflowSettings from "./pages/WorkflowSettings";
+import WorkflowNotifications from "./pages/WorkflowNotifications";
 import Team from "./pages/Team";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
