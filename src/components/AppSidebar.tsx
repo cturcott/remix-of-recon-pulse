@@ -1,4 +1,4 @@
-import { Car, LayoutDashboard, Kanban, FileText, Settings, Users, TruckIcon, BarChart3, Bell, Package } from "lucide-react";
+import { Car, LayoutDashboard, Kanban, FileText, Settings, Users, TruckIcon, BarChart3, Bell, Package, Workflow } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
 const navItems = [
