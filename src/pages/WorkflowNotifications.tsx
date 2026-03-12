@@ -232,46 +232,6 @@ export default function WorkflowNotifications() {
       </div>
 
       <div className="max-w-4xl space-y-6">
-        {/* Email Provider Settings (Platform Admin Only) */}
-        {isPlatformAdmin && (
-          <section className="rounded-xl border border-border bg-card p-5">
-            <div className="flex items-center gap-2 mb-4">
-              <Mail className="h-5 w-5 text-primary" />
-              <h2 className="font-semibold text-foreground">Email Provider (Postmark)</h2>
-              <Badge variant={integrationEnabled ? "secondary" : "outline"} className="text-xs ml-auto">
-                {integrationEnabled ? "Enabled" : "Disabled"}
-              </Badge>
-            </div>
-            <p className="text-sm text-muted-foreground mb-4">
-              Configure your Postmark sender details. The server token should be added as a secret named <code className="text-xs bg-muted px-1 py-0.5 rounded">POSTMARK_SERVER_TOKEN</code> in your backend settings.
-            </p>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label>From Email</Label>
-                <Input
-                  value={fromEmail}
-                  onChange={(e) => setFromEmail(e.target.value)}
-                  placeholder="notifications@yourdomain.com"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label>From Name</Label>
-                <Input value={fromName} onChange={(e) => setFromName(e.target.value)} placeholder="Recon Pulse" />
-              </div>
-            </div>
-            <div className="flex items-center justify-between mt-4">
-              <div className="flex items-center gap-2">
-                <Switch checked={integrationEnabled} onCheckedChange={setIntegrationEnabled} />
-                <Label className="text-sm">Enable email notifications</Label>
-              </div>
-              <Button size="sm" variant="outline" onClick={handleSaveProvider} disabled={savingProvider}>
-                {savingProvider ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Settings2 className="h-4 w-4 mr-1" />}
-                Save Provider Settings
-              </Button>
-            </div>
-          </section>
-        )}
-
         {/* Stage Rules */}
         <section>
           <h2 className="font-semibold text-foreground mb-3 flex items-center gap-2">
