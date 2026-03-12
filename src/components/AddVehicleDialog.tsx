@@ -322,7 +322,7 @@ export default function AddVehicleDialog() {
                 <Label htmlFor="lot">Lot Location</Label>
                 <Input id="lot" value={lotLocation} onChange={(e) => setLotLocation(e.target.value)} placeholder="Main lot, Row B" />
               </div>
-              <div className="space-y-1.5 col-span-2">
+              <div className="space-y-1.5 sm:col-span-2">
                 <Label htmlFor="notes">Notes</Label>
                 <Textarea id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Any intake notes..." rows={2} />
               </div>
