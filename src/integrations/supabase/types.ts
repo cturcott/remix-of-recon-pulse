@@ -862,6 +862,51 @@ export type Database = {
         }
         Relationships: []
       }
+      vehicle_notes: {
+        Row: {
+          author_id: string | null
+          content: string
+          created_at: string
+          dealership_id: string
+          id: string
+          note_type: string
+          vehicle_id: string
+        }
+        Insert: {
+          author_id?: string | null
+          content: string
+          created_at?: string
+          dealership_id: string
+          id?: string
+          note_type?: string
+          vehicle_id: string
+        }
+        Update: {
+          author_id?: string | null
+          content?: string
+          created_at?: string
+          dealership_id?: string
+          id?: string
+          note_type?: string
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_notes_dealership_id_fkey"
+            columns: ["dealership_id"]
+            isOneToOne: false
+            referencedRelation: "dealerships"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_notes_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vehicle_photos: {
         Row: {
           created_at: string
@@ -973,6 +1018,7 @@ export type Database = {
         Row: {
           acquisition_source: string | null
           acv: number | null
+          assigned_to: string | null
           body_style: string | null
           created_at: string
           created_by: string | null
@@ -1002,6 +1048,7 @@ export type Database = {
         Insert: {
           acquisition_source?: string | null
           acv?: number | null
+          assigned_to?: string | null
           body_style?: string | null
           created_at?: string
           created_by?: string | null
@@ -1031,6 +1078,7 @@ export type Database = {
         Update: {
           acquisition_source?: string | null
           acv?: number | null
+          assigned_to?: string | null
           body_style?: string | null
           created_at?: string
           created_by?: string | null
