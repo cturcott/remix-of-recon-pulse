@@ -87,6 +87,16 @@ export default function CommandCenter() {
         to_stage_id: toStageId,
         changed_by: user?.id,
       });
+
+      // Trigger stage notification (fire-and-forget)
+      supabase.functions.invoke("send-stage-notification", {
+        body: {
+          vehicle_id: vehicleId,
+          to_stage_id: toStageId,
+          dealership_id: currentDealership!.id,
+          triggered_by_user_id: user?.id,
+        },
+      }).catch(() => {}); // Don't block on notification failures
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["vehicles"] });

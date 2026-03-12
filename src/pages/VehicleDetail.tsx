@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AppLayout from "@/components/AppLayout";
 import { supabase } from "@/integrations/supabase/client";
+import NotificationHistory from "@/components/NotificationHistory";
 import { useDealership } from "@/contexts/DealershipContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -17,7 +18,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { toast } from "sonner";
 import {
   ArrowLeft, Car, Clock, Wrench, Plus, Check, X, DollarSign,
-  ChevronRight, Loader2, Trash2, CheckCircle2, XCircle, AlertCircle
+  ChevronRight, Loader2, Trash2, CheckCircle2, XCircle, AlertCircle, Bell, Mail
 } from "lucide-react";
 
 const CATEGORIES = ["Mechanical", "Electrical", "Cosmetic", "Body/Paint", "Glass", "Interior", "Tires/Wheels", "Sublet", "Detail", "Other"];
@@ -517,6 +518,9 @@ export default function VehicleDetail() {
               </div>
             )}
           </div>
+
+          {/* Notification History */}
+          <NotificationHistory vehicleId={id!} />
 
           {/* Notes */}
           {vehicle.notes && (
