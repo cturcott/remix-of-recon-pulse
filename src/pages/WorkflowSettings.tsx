@@ -199,7 +199,8 @@ export default function WorkflowSettings() {
             sort_order: stage.sort_order,
             is_active: stage.is_active,
             is_required: stage.is_required,
-          }).eq("id", stage.id);
+            sla_days: stage.sla_days,
+          } as any).eq("id", stage.id);
         }
       }
 
