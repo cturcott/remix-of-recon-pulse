@@ -350,9 +350,33 @@ export default function ImportSettings() {
 
   // Save mapping then import in one flow
   const handleSaveAndImport = async () => {
-    if (!manualUploadContent || !config || !currentDealership) {
+    if (!manualUploadContent || !currentDealership) {
       toast.error("Select a CSV file first");
       return;
+    }
+
+    // Auto-create config if it doesn't exist yet
+    let configToUse = config;
+    if (!configToUse) {
+      try {
+        const { data: newConfig, error } = await supabase
+          .from("dealership_import_configs")
+          .insert({
+            dealership_id: currentDealership.id,
+            is_enabled: false,
+            delimiter,
+            encoding,
+            has_header_row: hasHeader,
+          })
+          .select()
+          .single();
+        if (error) throw error;
+        configToUse = newConfig;
+        queryClient.invalidateQueries({ queryKey: ["import-config"] });
+      } catch (err: any) {
+        toast.error(err.message || "Failed to create import configuration");
+        return;
+      }
     }
 
     // Save mapping first if editing
