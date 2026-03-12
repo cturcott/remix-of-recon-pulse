@@ -41,7 +41,6 @@ interface Vehicle {
 
 interface WorkflowStage {
   id: string;
-  id: string;
   name: string;
   sort_order: number;
   is_active: boolean;
