@@ -171,9 +171,21 @@ export default function CommandCenter() {
       toStageId: string;
       fromStageId: string | null;
     }) => {
+      // Auto-assign user if stage has assignees configured
+      const { data: assignees } = await supabase
+        .from("workflow_stage_assignees")
+        .select("user_id")
+        .eq("workflow_stage_id", toStageId)
+        .limit(1);
+
+      const assignedTo = assignees && assignees.length > 0 ? assignees[0].user_id : null;
+
       const { error } = await supabase
         .from("vehicles")
-        .update({ current_stage_id: toStageId })
+        .update({
+          current_stage_id: toStageId,
+          ...(assignedTo ? { assigned_to: assignedTo } : {}),
+        })
         .eq("id", vehicleId);
       if (error) throw error;
 
