@@ -12,6 +12,7 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/u
 import {
   Send, MessageSquare, ArrowRight, User, Clock, Car,
   ExternalLink, Maximize2, MapPin, Palette, Gauge,
+  Wrench, Check, X, AlertCircle, DollarSign,
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
@@ -82,6 +83,21 @@ export default function VehicleSlideUpPanel({
         .eq("vehicle_id", vehicle.id)
         .order("changed_at", { ascending: false })
         .limit(20);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!vehicle && open,
+  });
+
+  const { data: repairItems = [] } = useQuery({
+    queryKey: ["vehicle-repair-items", vehicle?.id],
+    queryFn: async () => {
+      if (!vehicle) return [];
+      const { data, error } = await supabase
+        .from("repair_items")
+        .select("*")
+        .eq("vehicle_id", vehicle.id)
+        .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
     },
@@ -202,6 +218,79 @@ export default function VehicleSlideUpPanel({
 
             <div className="text-xs text-muted-foreground font-mono break-all">
               VIN: {vehicle.vin}
+            </div>
+
+            <Separator />
+
+            {/* Service / Repair Items */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                <Wrench className="h-3.5 w-3.5" />
+                Service Items
+                {repairItems.length > 0 && (
+                  <Badge variant="secondary" className="text-[10px] ml-1">{repairItems.length}</Badge>
+                )}
+              </h4>
+              {repairItems.length === 0 ? (
+                <p className="text-xs text-muted-foreground text-center py-4">No service items</p>
+              ) : (
+                <div className="space-y-2">
+                  {repairItems.map((item: any) => (
+                    <div
+                      key={item.id}
+                      className="flex items-start gap-2.5 rounded-md border border-border p-2.5"
+                    >
+                      <div className="mt-0.5 shrink-0">
+                        {item.status === "approved" && (
+                          <div className="flex h-5 w-5 items-center justify-center rounded-full bg-green-500/10">
+                            <Check className="h-3 w-3 text-green-600 dark:text-green-400" />
+                          </div>
+                        )}
+                        {item.status === "denied" && (
+                          <div className="flex h-5 w-5 items-center justify-center rounded-full bg-destructive/10">
+                            <X className="h-3 w-3 text-destructive" />
+                          </div>
+                        )}
+                        {item.status === "pending" && (
+                          <div className="flex h-5 w-5 items-center justify-center rounded-full bg-yellow-500/10">
+                            <AlertCircle className="h-3 w-3 text-yellow-600 dark:text-yellow-400" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-sm font-medium text-foreground truncate">{item.description}</p>
+                          <Badge
+                            variant="outline"
+                            className={`text-[10px] shrink-0 ${
+                              item.status === "approved"
+                                ? "border-green-500/50 text-green-600 dark:text-green-400"
+                                : item.status === "denied"
+                                ? "border-destructive/50 text-destructive"
+                                : "border-yellow-500/50 text-yellow-600 dark:text-yellow-400"
+                            }`}
+                          >
+                            {item.status}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                          {item.category && <span>{item.category}</span>}
+                          {item.estimated_cost != null && (
+                            <span className="flex items-center gap-0.5">
+                              <DollarSign className="h-3 w-3" />
+                              {Number(item.estimated_cost).toLocaleString()}
+                            </span>
+                          )}
+                          {item.vendor_name && <span>{item.vendor_name}</span>}
+                        </div>
+                        {item.status === "denied" && item.denial_reason && (
+                          <p className="text-xs text-destructive/80 mt-1">Reason: {item.denial_reason}</p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <Separator />
