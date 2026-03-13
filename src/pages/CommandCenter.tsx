@@ -53,7 +53,7 @@ type SortOption = "oldest" | "newest" | "stock";
 
 export default function CommandCenter() {
   const { currentDealership } = useDealership();
-  const { user } = useAuth();
+  const { user, roles } = useAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
