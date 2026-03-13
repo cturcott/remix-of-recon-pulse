@@ -2,8 +2,11 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   Car, Clock, ChevronRight, User, MessageSquare, AlertTriangle,
-  ExternalLink, Timer,
+  ExternalLink, Timer, ChevronsRight, Lock,
 } from "lucide-react";
 
 interface VehicleWorkCardProps {
@@ -25,8 +28,13 @@ interface VehicleWorkCardProps {
   assigneeName: string | null;
   notesCount: number;
   isSelected: boolean;
+  canMove: boolean;
+  isAdmin: boolean;
+  allStages?: { id: string; name: string; sort_order: number }[];
+  currentStageId?: string | null;
   onSelect: () => void;
   onMoveNext: () => void;
+  onMoveToStage?: (stageId: string) => void;
   onViewDetail: () => void;
 }
 
@@ -39,8 +47,8 @@ function getStageAge(createdAt: string) {
 
 function getAgingStatus(createdAt: string): "ok" | "warning" | "danger" {
   const hours = (Date.now() - new Date(createdAt).getTime()) / (1000 * 60 * 60);
-  if (hours > 240) return "danger"; // 10+ days
-  if (hours > 120) return "warning"; // 5+ days
+  if (hours > 240) return "danger";
+  if (hours > 120) return "warning";
   return "ok";
 }
 
@@ -50,12 +58,20 @@ export default function VehicleWorkCard({
   assigneeName,
   notesCount,
   isSelected,
+  canMove,
+  isAdmin,
+  allStages = [],
+  currentStageId,
   onSelect,
   onMoveNext,
+  onMoveToStage,
   onViewDetail,
 }: VehicleWorkCardProps) {
   const agingStatus = getAgingStatus(vehicle.created_at);
   const stageAge = getStageAge(vehicle.created_at);
+
+  // For admin "move to any stage" dropdown, exclude the current stage
+  const otherStages = allStages.filter((s) => s.id !== currentStageId);
 
   return (
     <div
@@ -127,7 +143,7 @@ export default function VehicleWorkCard({
 
       {/* Actions */}
       <div className="flex items-center gap-2">
-        {nextStageName && (
+        {nextStageName && canMove && (
           <Button
             size="sm"
             className="h-7 text-xs flex-1 gap-1"
@@ -140,6 +156,41 @@ export default function VehicleWorkCard({
             <ChevronRight className="h-3 w-3" />
           </Button>
         )}
+
+        {nextStageName && !canMove && (
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground flex-1">
+            <Lock className="h-3 w-3" />
+            <span>Not assigned to move</span>
+          </div>
+        )}
+
+        {/* Admin: move to any stage */}
+        {isAdmin && otherStages.length > 0 && onMoveToStage && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 w-7 p-0 shrink-0"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <ChevronsRight className="h-3.5 w-3.5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+              {otherStages.map((s) => (
+                <DropdownMenuItem
+                  key={s.id}
+                  onClick={() => onMoveToStage(s.id)}
+                  className="text-xs"
+                >
+                  Move to {s.name}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+
         <Button
           variant="ghost"
           size="sm"

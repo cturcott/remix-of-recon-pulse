@@ -53,7 +53,7 @@ type SortOption = "oldest" | "newest" | "stock";
 
 export default function CommandCenter() {
   const { currentDealership } = useDealership();
-  const { user } = useAuth();
+  const { user, roles } = useAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
@@ -159,6 +159,35 @@ export default function CommandCenter() {
     },
     enabled: !!currentDealership,
   });
+
+  // Fetch stage assignees to check move permissions
+  const { data: stageAssigneeMap = {} } = useQuery<Record<string, string[]>>({
+    queryKey: ["stage-assignees", currentDealership?.id],
+    queryFn: async () => {
+      if (!currentDealership) return {};
+      const { data, error } = await supabase
+        .from("workflow_stage_assignees")
+        .select("workflow_stage_id, user_id")
+        .eq("dealership_id", currentDealership.id);
+      if (error) throw error;
+      const map: Record<string, string[]> = {};
+      data.forEach((a: any) => {
+        if (!map[a.workflow_stage_id]) map[a.workflow_stage_id] = [];
+        map[a.workflow_stage_id].push(a.user_id);
+      });
+      return map;
+    },
+    enabled: !!currentDealership,
+  });
+
+  const isAdmin = roles.includes("platform_admin") || roles.includes("dealership_admin") || roles.includes("recon_manager");
+
+  const canUserMoveFromStage = (stageId: string | null): boolean => {
+    if (isAdmin) return true;
+    if (!stageId || !user) return false;
+    const assignees = stageAssigneeMap[stageId];
+    return assignees ? assignees.includes(user.id) : false;
+  };
 
   // ─── Mutations ───
   const moveVehicle = useMutation({
@@ -418,6 +447,10 @@ export default function CommandCenter() {
                         assigneeName={getAssigneeName(v.assigned_to)}
                         notesCount={(notesCounts as Record<string, number>)[v.id] || 0}
                         isSelected={selectedVehicleId === v.id}
+                        canMove={canUserMoveFromStage(v.current_stage_id)}
+                        isAdmin={isAdmin}
+                        allStages={stages}
+                        currentStageId={v.current_stage_id}
                         onSelect={() => {
                           setSelectedVehicleId(v.id);
                           if (isMobile) setMobileContextOpen(true);
@@ -427,6 +460,13 @@ export default function CommandCenter() {
                           moveVehicle.mutate({
                             vehicleId: v.id,
                             toStageId: nextStage.id,
+                            fromStageId: v.current_stage_id,
+                          });
+                        }}
+                        onMoveToStage={(stageId) => {
+                          moveVehicle.mutate({
+                            vehicleId: v.id,
+                            toStageId: stageId,
                             fromStageId: v.current_stage_id,
                           });
                         }}
