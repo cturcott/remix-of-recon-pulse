@@ -293,7 +293,7 @@ export default function WorkflowSettings() {
                 disabled={!isDealershipAdmin}
               />
               <div className="flex items-center gap-1.5 shrink-0">
-                <span className="text-xs text-muted-foreground hidden sm:inline">SLA</span>
+                <span className="text-xs text-muted-foreground hidden sm:inline">Overdue Time</span>
                 <Input
                   type="number"
                   min={1}
