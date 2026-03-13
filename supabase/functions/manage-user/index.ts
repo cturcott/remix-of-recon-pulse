@@ -225,6 +225,12 @@ serve(async (req) => {
       }
 
       case "delete_user": {
+        if (!isPlatformAdmin) {
+          return new Response(JSON.stringify({ error: "Only platform admins can delete users" }), {
+            status: 403,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
         const { user_id } = params;
         const { data: profile } = await supabaseAdmin
           .from("profiles")
