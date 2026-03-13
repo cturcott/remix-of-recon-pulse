@@ -160,6 +160,35 @@ export default function CommandCenter() {
     enabled: !!currentDealership,
   });
 
+  // Fetch stage assignees to check move permissions
+  const { data: stageAssigneeMap = {} } = useQuery<Record<string, string[]>>({
+    queryKey: ["stage-assignees", currentDealership?.id],
+    queryFn: async () => {
+      if (!currentDealership) return {};
+      const { data, error } = await supabase
+        .from("workflow_stage_assignees")
+        .select("workflow_stage_id, user_id")
+        .eq("dealership_id", currentDealership.id);
+      if (error) throw error;
+      const map: Record<string, string[]> = {};
+      data.forEach((a: any) => {
+        if (!map[a.workflow_stage_id]) map[a.workflow_stage_id] = [];
+        map[a.workflow_stage_id].push(a.user_id);
+      });
+      return map;
+    },
+    enabled: !!currentDealership,
+  });
+
+  const isAdmin = roles.includes("platform_admin") || roles.includes("dealership_admin") || roles.includes("recon_manager");
+
+  const canUserMoveFromStage = (stageId: string | null): boolean => {
+    if (isAdmin) return true;
+    if (!stageId || !user) return false;
+    const assignees = stageAssigneeMap[stageId];
+    return assignees ? assignees.includes(user.id) : false;
+  };
+
   // ─── Mutations ───
   const moveVehicle = useMutation({
     mutationFn: async ({
