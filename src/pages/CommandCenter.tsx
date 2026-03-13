@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import AppLayout from "@/components/AppLayout";
 import StageQueueSidebar from "@/components/recon-board/StageQueueSidebar";
 import VehicleWorkCard from "@/components/recon-board/VehicleWorkCard";
-import VehicleContextPanel from "@/components/recon-board/VehicleContextPanel";
+import VehicleSlideUpPanel from "@/components/recon-board/VehicleSlideUpPanel";
 import MobileStageSelector from "@/components/recon-board/MobileStageSelector";
 import AddVehicleDialog from "@/components/AddVehicleDialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
