@@ -48,8 +48,14 @@ serve(async (req) => {
     }
 
     const { token: postmarkToken } = await req.json();
-    if (!postmarkToken) {
-      return new Response(JSON.stringify({ error: "Token is required" }), {
+    
+    // If "validate-existing", use the stored secret
+    const tokenToValidate = postmarkToken === "validate-existing" 
+      ? Deno.env.get("POSTMARK_SERVER_TOKEN") 
+      : postmarkToken;
+      
+    if (!tokenToValidate) {
+      return new Response(JSON.stringify({ error: "No token found. Please set POSTMARK_SERVER_TOKEN as a backend secret." }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
