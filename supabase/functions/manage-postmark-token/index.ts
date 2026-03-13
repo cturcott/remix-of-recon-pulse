@@ -66,7 +66,7 @@ serve(async (req) => {
       method: "GET",
       headers: {
         "Accept": "application/json",
-        "X-Postmark-Server-Token": postmarkToken,
+        "X-Postmark-Server-Token": tokenToValidate,
       },
     });
 
