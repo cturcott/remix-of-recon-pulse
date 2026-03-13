@@ -1170,6 +1170,45 @@ export type Database = {
           },
         ]
       }
+      workflow_stage_assignees: {
+        Row: {
+          created_at: string
+          dealership_id: string
+          id: string
+          user_id: string
+          workflow_stage_id: string
+        }
+        Insert: {
+          created_at?: string
+          dealership_id: string
+          id?: string
+          user_id: string
+          workflow_stage_id: string
+        }
+        Update: {
+          created_at?: string
+          dealership_id?: string
+          id?: string
+          user_id?: string
+          workflow_stage_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workflow_stage_assignees_dealership_id_fkey"
+            columns: ["dealership_id"]
+            isOneToOne: false
+            referencedRelation: "dealerships"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workflow_stage_assignees_workflow_stage_id_fkey"
+            columns: ["workflow_stage_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_stages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       workflow_stages: {
         Row: {
           created_at: string
