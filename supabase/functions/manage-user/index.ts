@@ -292,6 +292,13 @@ serve(async (req) => {
             .insert({ user_id: userData.user.id, role });
         }
 
+        // Auto-assign to dealership if provided
+        if (dealership_id) {
+          await supabaseAdmin
+            .from("user_dealership_assignments")
+            .insert({ user_id: userData.user.id, dealership_id, is_default: true });
+        }
+
         // Send welcome email with credentials
         const postmarkConfig = await getPostmarkConfig(supabaseAdmin);
         if (postmarkConfig) {
