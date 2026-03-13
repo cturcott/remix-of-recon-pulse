@@ -254,7 +254,15 @@ serve(async (req) => {
       }
 
       case "create_user": {
-        const { email, password, first_name, last_name, title, phone, role } = params;
+        const { email, password, first_name, last_name, title, phone, role, dealership_id } = params;
+
+        // Dealership admins cannot assign platform_admin role
+        if (!isPlatformAdmin && role === "platform_admin") {
+          return new Response(JSON.stringify({ error: "Cannot assign platform admin role" }), {
+            status: 403,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
         const { data: userData, error: createError } = await supabaseAdmin.auth.admin.createUser({
           email,
           password,
