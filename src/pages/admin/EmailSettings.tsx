@@ -167,32 +167,24 @@ export default function EmailSettings() {
         <section className="rounded-xl border border-border bg-card p-6">
           <h2 className="text-lg font-semibold text-foreground mb-1">Server API Token</h2>
           <p className="text-sm text-muted-foreground mb-4">
-            Your Postmark Server API Token. Find this in{" "}
-            <a href="https://account.postmarkapp.com/servers" target="_blank" rel="noopener noreferrer" className="text-primary underline">
-              Postmark → Servers → Your Server → API Tokens
-            </a>.
+            The Postmark Server API Token is stored as a secure backend secret (<code className="text-xs bg-muted px-1 py-0.5 rounded">POSTMARK_SERVER_TOKEN</code>).
+            To update it, use the Lovable secrets manager. You can validate the current token below.
           </p>
-          <div className="space-y-1.5">
-            <Label>Server Token</Label>
-            <div className="relative">
-              <Input
-                type={showToken ? "text" : "password"}
-                value={serverToken}
-                onChange={(e) => setServerToken(e.target.value)}
-                placeholder="Enter new token to update (current value hidden)"
-                className="pr-10"
-              />
-              <button
-                type="button"
-                onClick={() => setShowToken(!showToken)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              >
-                {showToken ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              The token is stored securely as a backend secret. Leave blank to keep the current value.
-            </p>
+          <div className="flex items-center gap-3">
+            <Button onClick={handleValidateToken} disabled={validating} variant="outline" size="sm">
+              {validating ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <ShieldCheck className="h-4 w-4 mr-1" />}
+              Validate Current Token
+            </Button>
+            {tokenStatus === "valid" && (
+              <Badge variant="default" className="gap-1">
+                <CheckCircle2 className="h-3 w-3" /> Valid
+              </Badge>
+            )}
+            {tokenStatus === "invalid" && (
+              <Badge variant="destructive" className="gap-1">
+                <XCircle className="h-3 w-3" /> Invalid
+              </Badge>
+            )}
           </div>
         </section>
 
