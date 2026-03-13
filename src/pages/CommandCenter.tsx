@@ -62,7 +62,7 @@ export default function CommandCenter() {
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<SortOption>("oldest");
-  const [mobileContextOpen, setMobileContextOpen] = useState(false);
+  const [slideUpOpen, setSlideUpOpen] = useState(false);
 
   // ─── Queries ───
   const { data: stages = [] } = useQuery<WorkflowStage[]>({
