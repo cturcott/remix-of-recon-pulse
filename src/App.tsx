@@ -30,9 +30,10 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { session, loading } = useAuth();
+  const { session, user, loading } = useAuth();
   if (loading) return <div className="min-h-screen bg-background flex items-center justify-center text-muted-foreground">Loading...</div>;
   if (!session) return <Navigate to="/auth" replace />;
+  if (user?.user_metadata?.force_password_change) return <Navigate to="/change-password" replace />;
   return <>{children}</>;
 }
 
