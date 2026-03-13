@@ -194,7 +194,7 @@ export default function VehicleSlideUpPanel({
           </Button>
         </DrawerHeader>
 
-        <ScrollArea className="flex-1 max-h-[calc(85vh-5rem)]">
+        <ScrollArea className="flex-1 min-h-0">
           <div className="px-4 pb-6 space-y-5">
             {/* Vehicle details grid */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
