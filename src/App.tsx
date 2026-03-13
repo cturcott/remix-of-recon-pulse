@@ -24,6 +24,7 @@ import ImportReviewQueue from "./pages/ImportReviewQueue";
 import Team from "./pages/Team";
 import Approvals from "./pages/Approvals";
 import Settings from "./pages/Settings";
+import ChangePassword from "./pages/ChangePassword";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
