@@ -89,6 +89,21 @@ export default function VehicleSlideUpPanel({
     enabled: !!vehicle && open,
   });
 
+  const { data: repairItems = [] } = useQuery({
+    queryKey: ["vehicle-repair-items", vehicle?.id],
+    queryFn: async () => {
+      if (!vehicle) return [];
+      const { data, error } = await supabase
+        .from("repair_items")
+        .select("*")
+        .eq("vehicle_id", vehicle.id)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!vehicle && open,
+  });
+
   const addNote = useMutation({
     mutationFn: async (content: string) => {
       if (!vehicle) return;
