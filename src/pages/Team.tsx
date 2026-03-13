@@ -252,7 +252,7 @@ export default function Team() {
                 <Plus className="h-4 w-4" /> Add Team Member
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-md">
+            <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Add Team Member</DialogTitle>
                 <DialogDescription>Create a new user and assign them to {currentDealership?.name}.</DialogDescription>
