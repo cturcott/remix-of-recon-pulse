@@ -46,6 +46,29 @@ export default function EmailSettings() {
     }
   }, [settings]);
 
+  const handleValidateToken = async () => {
+    setValidating(true);
+    setTokenStatus("unknown");
+    try {
+      const { data, error } = await supabase.functions.invoke("manage-postmark-token", {
+        body: { token: "validate-existing" },
+      });
+      if (error) throw error;
+      if (data?.success) {
+        setTokenStatus("valid");
+        toast.success(`Token valid — server: ${data.serverName}`);
+      } else {
+        setTokenStatus("invalid");
+        toast.error(data?.error || "Token validation failed");
+      }
+    } catch (err: any) {
+      setTokenStatus("invalid");
+      toast.error(err.message || "Failed to validate token");
+    } finally {
+      setValidating(false);
+    }
+  };
+
   const handleSave = async () => {
     setSaving(true);
     try {
@@ -68,15 +91,6 @@ export default function EmailSettings() {
           .from("email_provider_settings")
           .insert(payload);
         if (error) throw error;
-      }
-
-      // Save server token via edge function if provided
-      if (serverToken.trim()) {
-        const { error } = await supabase.functions.invoke("manage-postmark-token", {
-          body: { token: serverToken.trim() },
-        });
-        if (error) throw error;
-        setServerToken("");
       }
 
       queryClient.invalidateQueries({ queryKey: ["email-provider-settings"] });
