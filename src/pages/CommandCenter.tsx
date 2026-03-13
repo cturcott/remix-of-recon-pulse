@@ -453,7 +453,7 @@ export default function CommandCenter() {
                         currentStageId={v.current_stage_id}
                         onSelect={() => {
                           setSelectedVehicleId(v.id);
-                          if (isMobile) setMobileContextOpen(true);
+                          setSlideUpOpen(true);
                         }}
                         onMoveNext={() => {
                           if (!nextStage) return;
