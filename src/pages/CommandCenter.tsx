@@ -447,6 +447,10 @@ export default function CommandCenter() {
                         assigneeName={getAssigneeName(v.assigned_to)}
                         notesCount={(notesCounts as Record<string, number>)[v.id] || 0}
                         isSelected={selectedVehicleId === v.id}
+                        canMove={canUserMoveFromStage(v.current_stage_id)}
+                        isAdmin={isAdmin}
+                        allStages={stages}
+                        currentStageId={v.current_stage_id}
                         onSelect={() => {
                           setSelectedVehicleId(v.id);
                           if (isMobile) setMobileContextOpen(true);
@@ -456,6 +460,13 @@ export default function CommandCenter() {
                           moveVehicle.mutate({
                             vehicleId: v.id,
                             toStageId: nextStage.id,
+                            fromStageId: v.current_stage_id,
+                          });
+                        }}
+                        onMoveToStage={(stageId) => {
+                          moveVehicle.mutate({
+                            vehicleId: v.id,
+                            toStageId: stageId,
                             fromStageId: v.current_stage_id,
                           });
                         }}
