@@ -134,7 +134,7 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Verify the caller is a platform_admin
+    // Verify the caller is platform_admin or dealership_admin
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -156,12 +156,17 @@ serve(async (req) => {
       });
     }
 
-    const { data: hasRole } = await supabaseAdmin.rpc("has_role", {
+    const { data: isPlatformAdmin } = await supabaseAdmin.rpc("has_role", {
       _user_id: caller.id,
       _role: "platform_admin",
     });
-    if (!hasRole) {
-      return new Response(JSON.stringify({ error: "Forbidden: Platform admin required" }), {
+    const { data: isDealershipAdmin } = await supabaseAdmin.rpc("has_role", {
+      _user_id: caller.id,
+      _role: "dealership_admin",
+    });
+
+    if (!isPlatformAdmin && !isDealershipAdmin) {
+      return new Response(JSON.stringify({ error: "Forbidden: Admin role required" }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -220,6 +225,12 @@ serve(async (req) => {
       }
 
       case "delete_user": {
+        if (!isPlatformAdmin) {
+          return new Response(JSON.stringify({ error: "Only platform admins can delete users" }), {
+            status: 403,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
         const { user_id } = params;
         const { data: profile } = await supabaseAdmin
           .from("profiles")
@@ -249,7 +260,15 @@ serve(async (req) => {
       }
 
       case "create_user": {
-        const { email, password, first_name, last_name, title, phone, role } = params;
+        const { email, password, first_name, last_name, title, phone, role, dealership_id } = params;
+
+        // Dealership admins cannot assign platform_admin role
+        if (!isPlatformAdmin && role === "platform_admin") {
+          return new Response(JSON.stringify({ error: "Cannot assign platform admin role" }), {
+            status: 403,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
         const { data: userData, error: createError } = await supabaseAdmin.auth.admin.createUser({
           email,
           password,
@@ -277,6 +296,13 @@ serve(async (req) => {
           await supabaseAdmin
             .from("user_roles")
             .insert({ user_id: userData.user.id, role });
+        }
+
+        // Auto-assign to dealership if provided
+        if (dealership_id) {
+          await supabaseAdmin
+            .from("user_dealership_assignments")
+            .insert({ user_id: userData.user.id, dealership_id, is_default: true });
         }
 
         // Send welcome email with credentials
