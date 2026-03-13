@@ -30,8 +30,8 @@ export default function EmailSettings() {
   const [fromEmail, setFromEmail] = useState("");
   const [fromName, setFromName] = useState("Recon Pulse");
   const [messageStream, setMessageStream] = useState("outbound");
-  const [serverToken, setServerToken] = useState("");
-  const [showToken, setShowToken] = useState(false);
+  const [tokenStatus, setTokenStatus] = useState<"unknown" | "valid" | "invalid">("unknown");
+  const [validating, setValidating] = useState(false);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
   const [testEmail, setTestEmail] = useState("");
