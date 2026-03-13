@@ -134,7 +134,7 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Verify the caller is a platform_admin
+    // Verify the caller is platform_admin or dealership_admin
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -156,12 +156,17 @@ serve(async (req) => {
       });
     }
 
-    const { data: hasRole } = await supabaseAdmin.rpc("has_role", {
+    const { data: isPlatformAdmin } = await supabaseAdmin.rpc("has_role", {
       _user_id: caller.id,
       _role: "platform_admin",
     });
-    if (!hasRole) {
-      return new Response(JSON.stringify({ error: "Forbidden: Platform admin required" }), {
+    const { data: isDealershipAdmin } = await supabaseAdmin.rpc("has_role", {
+      _user_id: caller.id,
+      _role: "dealership_admin",
+    });
+
+    if (!isPlatformAdmin && !isDealershipAdmin) {
+      return new Response(JSON.stringify({ error: "Forbidden: Admin role required" }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
