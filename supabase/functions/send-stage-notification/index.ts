@@ -48,7 +48,7 @@ serve(async (req) => {
       );
     }
 
-    // Get notification rule for this stage
+    // Get notification rule for this stage (may not exist)
     const { data: rule } = await supabase
       .from("stage_notification_rules")
       .select("*")
@@ -57,28 +57,44 @@ serve(async (req) => {
       .eq("notifications_enabled", true)
       .single();
 
-    if (!rule) {
+    // Get stage assignees (always check, even without a notification rule)
+    const { data: stageAssignees } = await supabase
+      .from("workflow_stage_assignees")
+      .select("user_id")
+      .eq("workflow_stage_id", to_stage_id)
+      .eq("dealership_id", dealership_id);
+
+    if (!rule && (!stageAssignees || stageAssignees.length === 0)) {
       return new Response(
-        JSON.stringify({ status: "skipped", reason: "No notification rule for this stage" }),
+        JSON.stringify({ status: "skipped", reason: "No notification rule or stage assignees" }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Get recipients
-    const { data: recipients } = await supabase
-      .from("stage_notification_rule_recipients")
-      .select("user_id, recipient_type")
-      .eq("stage_notification_rule_id", rule.id);
+    // Get notification rule recipients (only if a rule exists)
+    let ruleRecipientUserIds: string[] = [];
+    if (rule) {
+      const { data: ruleRecipients } = await supabase
+        .from("stage_notification_rule_recipients")
+        .select("user_id")
+        .eq("stage_notification_rule_id", rule.id);
+      ruleRecipientUserIds = (ruleRecipients || []).map((r) => r.user_id);
+    }
 
-    if (!recipients || recipients.length === 0) {
+    // Merge all recipient user IDs (deduplicated)
+    const allUserIds = new Set<string>();
+    ruleRecipientUserIds.forEach((id) => allUserIds.add(id));
+    stageAssignees?.forEach((a) => allUserIds.add(a.user_id));
+
+    if (allUserIds.size === 0) {
       return new Response(
-        JSON.stringify({ status: "skipped", reason: "No recipients configured" }),
+        JSON.stringify({ status: "skipped", reason: "No recipients or assignees configured" }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Get user profiles for recipients
-    const userIds = recipients.map((r) => r.user_id);
+    // Get user profiles for all recipients
+    const userIds = Array.from(allUserIds);
     const { data: profiles } = await supabase
       .from("profiles")
       .select("user_id, email, first_name, last_name, status")
@@ -92,26 +108,15 @@ serve(async (req) => {
       );
     }
 
-    // Get vehicle details
-    const { data: vehicle } = await supabase
-      .from("vehicles")
-      .select("*")
-      .eq("id", vehicle_id)
-      .single();
-
-    // Get stage name
-    const { data: stage } = await supabase
-      .from("workflow_stages")
-      .select("name")
-      .eq("id", to_stage_id)
-      .single();
-
-    // Get dealership name
-    const { data: dealership } = await supabase
-      .from("dealerships")
-      .select("name")
-      .eq("id", dealership_id)
-      .single();
+    // Get vehicle details, stage name, dealership name in parallel
+    const [vehicleRes, stageRes, dealershipRes] = await Promise.all([
+      supabase.from("vehicles").select("*").eq("id", vehicle_id).single(),
+      supabase.from("workflow_stages").select("name").eq("id", to_stage_id).single(),
+      supabase.from("dealerships").select("name").eq("id", dealership_id).single(),
+    ]);
+    const vehicle = vehicleRes.data;
+    const stage = stageRes.data;
+    const dealership = dealershipRes.data;
 
     // Deduplicate by email
     const uniqueEmails = new Map<string, typeof profiles[0]>();
@@ -132,7 +137,7 @@ serve(async (req) => {
         triggered_by_user_id,
         status: "pending",
         provider: "postmark",
-        template_key: rule.template_key_stage_entry || "vehicle-entered-stage",
+        template_key: rule?.template_key_stage_entry || "vehicle-entered-stage",
         tag: "stage-entry",
         metadata_json: {
           dealershipName: dealership?.name,
