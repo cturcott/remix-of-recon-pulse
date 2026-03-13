@@ -8,7 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Save, Mail, TestTube, Loader2, CheckCircle2, XCircle, Eye, EyeOff } from "lucide-react";
+import { Save, Mail, TestTube, Loader2, CheckCircle2, XCircle, ShieldCheck } from "lucide-react";
 
 export default function EmailSettings() {
   const queryClient = useQueryClient();
