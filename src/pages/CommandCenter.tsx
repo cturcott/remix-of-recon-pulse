@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import AppLayout from "@/components/AppLayout";
 import StageQueueSidebar from "@/components/recon-board/StageQueueSidebar";
 import VehicleWorkCard from "@/components/recon-board/VehicleWorkCard";
-import VehicleContextPanel from "@/components/recon-board/VehicleContextPanel";
+import VehicleSlideUpPanel from "@/components/recon-board/VehicleSlideUpPanel";
 import MobileStageSelector from "@/components/recon-board/MobileStageSelector";
 import AddVehicleDialog from "@/components/AddVehicleDialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -19,7 +19,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Search, SlidersHorizontal, ArrowUpDown, Car, Clock, AlertTriangle } from "lucide-react";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
+
 
 interface Vehicle {
   id: string;
@@ -62,7 +62,7 @@ export default function CommandCenter() {
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<SortOption>("oldest");
-  const [mobileContextOpen, setMobileContextOpen] = useState(false);
+  const [slideUpOpen, setSlideUpOpen] = useState(false);
 
   // ─── Queries ───
   const { data: stages = [] } = useQuery<WorkflowStage[]>({
@@ -453,7 +453,7 @@ export default function CommandCenter() {
                         currentStageId={v.current_stage_id}
                         onSelect={() => {
                           setSelectedVehicleId(v.id);
-                          if (isMobile) setMobileContextOpen(true);
+                          setSlideUpOpen(true);
                         }}
                         onMoveNext={() => {
                           if (!nextStage) return;
@@ -479,28 +479,19 @@ export default function CommandCenter() {
             </ScrollArea>
           </div>
 
-          {/* C. Right context panel — desktop */}
-          {!isMobile && selectedVehicle && (
-            <VehicleContextPanel
-              vehicle={selectedVehicle}
-              stages={stages}
-              onClose={() => setSelectedVehicleId(null)}
-            />
-          )}
         </div>
 
-        {/* Mobile context panel as sheet */}
-        {isMobile && selectedVehicle && (
-          <Sheet open={mobileContextOpen} onOpenChange={setMobileContextOpen}>
-            <SheetContent side="bottom" className="h-[75vh] p-0 rounded-t-2xl">
-              <VehicleContextPanel
-                vehicle={selectedVehicle}
-                stages={stages}
-                onClose={() => setMobileContextOpen(false)}
-              />
-            </SheetContent>
-          </Sheet>
-        )}
+        {/* Slide-up vehicle detail panel */}
+        <VehicleSlideUpPanel
+          vehicle={selectedVehicle ?? null}
+          stages={stages}
+          open={slideUpOpen}
+          onOpenChange={(open) => {
+            setSlideUpOpen(open);
+            if (!open) setSelectedVehicleId(null);
+          }}
+          assigneeName={selectedVehicle ? getAssigneeName(selectedVehicle.assigned_to) : null}
+        />
       </div>
     </AppLayout>
   );
