@@ -12,6 +12,7 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/u
 import {
   Send, MessageSquare, ArrowRight, User, Clock, Car,
   ExternalLink, Maximize2, MapPin, Palette, Gauge,
+  Wrench, Check, X, AlertCircle, DollarSign,
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
