@@ -479,28 +479,19 @@ export default function CommandCenter() {
             </ScrollArea>
           </div>
 
-          {/* C. Right context panel — desktop */}
-          {!isMobile && selectedVehicle && (
-            <VehicleContextPanel
-              vehicle={selectedVehicle}
-              stages={stages}
-              onClose={() => setSelectedVehicleId(null)}
-            />
-          )}
         </div>
 
-        {/* Mobile context panel as sheet */}
-        {isMobile && selectedVehicle && (
-          <Sheet open={mobileContextOpen} onOpenChange={setMobileContextOpen}>
-            <SheetContent side="bottom" className="h-[75vh] p-0 rounded-t-2xl">
-              <VehicleContextPanel
-                vehicle={selectedVehicle}
-                stages={stages}
-                onClose={() => setMobileContextOpen(false)}
-              />
-            </SheetContent>
-          </Sheet>
-        )}
+        {/* Slide-up vehicle detail panel */}
+        <VehicleSlideUpPanel
+          vehicle={selectedVehicle ?? null}
+          stages={stages}
+          open={slideUpOpen}
+          onOpenChange={(open) => {
+            setSlideUpOpen(open);
+            if (!open) setSelectedVehicleId(null);
+          }}
+          assigneeName={selectedVehicle ? getAssigneeName(selectedVehicle.assigned_to) : null}
+        />
       </div>
     </AppLayout>
   );
