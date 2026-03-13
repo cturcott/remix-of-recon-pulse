@@ -18,9 +18,11 @@ export default function Auth() {
     e.preventDefault();
     setLoading(true);
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
       toast({ variant: "destructive", title: "Login failed", description: error.message });
+    } else if (data.user?.user_metadata?.force_password_change) {
+      navigate("/change-password", { replace: true });
     } else {
       navigate("/dashboard");
     }

@@ -254,7 +254,7 @@ serve(async (req) => {
           email,
           password,
           email_confirm: true,
-          user_metadata: { first_name, last_name },
+          user_metadata: { first_name, last_name, force_password_change: true },
         });
 
         if (createError) {

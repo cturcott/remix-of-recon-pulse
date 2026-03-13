@@ -24,14 +24,16 @@ import ImportReviewQueue from "./pages/ImportReviewQueue";
 import Team from "./pages/Team";
 import Approvals from "./pages/Approvals";
 import Settings from "./pages/Settings";
+import ChangePassword from "./pages/ChangePassword";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { session, loading } = useAuth();
+  const { session, user, loading } = useAuth();
   if (loading) return <div className="min-h-screen bg-background flex items-center justify-center text-muted-foreground">Loading...</div>;
   if (!session) return <Navigate to="/auth" replace />;
+  if (user?.user_metadata?.force_password_change) return <Navigate to="/change-password" replace />;
   return <>{children}</>;
 }
 
@@ -46,6 +48,7 @@ const AppRoutes = () => (
   <Routes>
     <Route path="/" element={<LandingPage />} />
     <Route path="/auth" element={<Auth />} />
+    <Route path="/change-password" element={<ChangePassword />} />
     <Route path="/command-center" element={<ProtectedRoute><CommandCenter /></ProtectedRoute>} />
     <Route path="/dashboard" element={<Navigate to="/command-center" replace />} />
     <Route path="/recon-board" element={<Navigate to="/command-center" replace />} />
