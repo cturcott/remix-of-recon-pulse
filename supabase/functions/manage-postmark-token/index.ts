@@ -48,8 +48,14 @@ serve(async (req) => {
     }
 
     const { token: postmarkToken } = await req.json();
-    if (!postmarkToken) {
-      return new Response(JSON.stringify({ error: "Token is required" }), {
+    
+    // If "validate-existing", use the stored secret
+    const tokenToValidate = postmarkToken === "validate-existing" 
+      ? Deno.env.get("POSTMARK_SERVER_TOKEN") 
+      : postmarkToken;
+      
+    if (!tokenToValidate) {
+      return new Response(JSON.stringify({ error: "No token found. Please set POSTMARK_SERVER_TOKEN as a backend secret." }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -60,7 +66,7 @@ serve(async (req) => {
       method: "GET",
       headers: {
         "Accept": "application/json",
-        "X-Postmark-Server-Token": postmarkToken,
+        "X-Postmark-Server-Token": tokenToValidate,
       },
     });
 
@@ -73,23 +79,11 @@ serve(async (req) => {
 
     const serverInfo = await validateRes.json();
 
-    // Store as a Vault secret using raw SQL via service role
-    // We use the Supabase Vault to securely store the token
-    const { error: vaultError } = await supabase.rpc("set_postmark_token" as any, {
-      _token: postmarkToken,
-    });
-
-    // If vault RPC doesn't exist, fall back — the token is already validated
-    // The admin should use the secrets management to set POSTMARK_SERVER_TOKEN
-    if (vaultError) {
-      console.log("Vault RPC not available, token validated but must be set via secrets:", vaultError.message);
-    }
-
     return new Response(
       JSON.stringify({ 
         success: true, 
         serverName: serverInfo.Name,
-        message: "Token validated successfully. Set POSTMARK_SERVER_TOKEN as a backend secret to activate." 
+        message: "Token validated successfully against Postmark API." 
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
