@@ -61,7 +61,7 @@ export default function WorkflowSettings() {
 
   const isDealershipAdmin = isPlatformAdmin || roles.includes("dealership_admin");
 
-  const { data: fetchedStages, isLoading } = useQuery({
+  const { data: fetchedStages, isLoading: stagesLoading, error: stagesError } = useQuery({
     queryKey: ["workflow-stages", currentDealership?.id],
     queryFn: async () => {
       if (!currentDealership) return [];
@@ -370,8 +370,10 @@ export default function WorkflowSettings() {
         </div>
       </div>
 
-      {dealershipLoading || isLoading ? (
+      {dealershipLoading || stagesLoading ? (
         <div className="flex items-center justify-center py-12 text-muted-foreground">Loading stages...</div>
+      ) : stagesError ? (
+        <div className="flex items-center justify-center py-12 text-muted-foreground">Unable to load workflow stages</div>
       ) : !currentDealership ? (
         <div className="flex items-center justify-center py-12 text-muted-foreground">No dealership selected</div>
       ) : (

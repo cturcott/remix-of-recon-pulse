@@ -28,7 +28,7 @@ interface StageRule {
 }
 
 export default function WorkflowNotifications() {
-  const { currentDealership } = useDealership();
+  const { currentDealership, loading: dealershipLoading } = useDealership();
   const { user, isPlatformAdmin, roles } = useAuth();
   const queryClient = useQueryClient();
   const isDealershipAdmin = isPlatformAdmin || roles.includes("dealership_admin");
@@ -36,9 +36,8 @@ export default function WorkflowNotifications() {
   const [rules, setRules] = useState<StageRule[]>([]);
   const [saving, setSaving] = useState(false);
 
-
   // Get stages
-  const { data: stages = [] } = useQuery({
+  const { data: stages = [], isLoading: stagesLoading, error: stagesError } = useQuery({
     queryKey: ["workflow-stages", currentDealership?.id],
     queryFn: async () => {
       if (!currentDealership) return [];
@@ -55,7 +54,7 @@ export default function WorkflowNotifications() {
   });
 
   // Get existing rules
-  const { data: existingRules = [] } = useQuery({
+  const { data: existingRules = [], isLoading: rulesLoading, error: rulesError } = useQuery({
     queryKey: ["notification-rules", currentDealership?.id],
     queryFn: async () => {
       if (!currentDealership) return [];
@@ -70,7 +69,7 @@ export default function WorkflowNotifications() {
   });
 
   // Get existing recipients
-  const { data: existingRecipients = [] } = useQuery({
+  const { data: existingRecipients = [], isLoading: recipientsLoading, error: recipientsError } = useQuery({
     queryKey: ["notification-recipients", currentDealership?.id],
     queryFn: async () => {
       if (!currentDealership || existingRules.length === 0) return [];
@@ -86,7 +85,7 @@ export default function WorkflowNotifications() {
   });
 
   // Get team members
-  const { data: teamMembers = [] } = useQuery({
+  const { data: teamMembers = [], isLoading: membersLoading, error: membersError } = useQuery({
     queryKey: ["team-for-notifications", currentDealership?.id],
     queryFn: async () => {
       if (!currentDealership) return [];
@@ -215,6 +214,8 @@ export default function WorkflowNotifications() {
 
 
   const [expandedStage, setExpandedStage] = useState<string | null>(null);
+  const pageLoading = dealershipLoading || stagesLoading || rulesLoading || recipientsLoading || membersLoading;
+  const pageError = stagesError || rulesError || recipientsError || membersError;
 
   return (
     <AppLayout>
@@ -232,160 +233,161 @@ export default function WorkflowNotifications() {
       </div>
 
       <div className="max-w-4xl space-y-6">
-        {/* Stage Rules */}
-        <section>
-          <h2 className="font-semibold text-foreground mb-3 flex items-center gap-2">
-            <Bell className="h-5 w-5 text-primary" />
-            Stage Notification Rules
-          </h2>
+        {pageLoading ? (
+          <div className="flex items-center justify-center py-12 text-muted-foreground">Loading notification rules...</div>
+        ) : pageError ? (
+          <div className="flex items-center justify-center py-12 text-muted-foreground">Unable to load notification settings</div>
+        ) : !currentDealership ? (
+          <div className="flex items-center justify-center py-12 text-muted-foreground">No dealership selected</div>
+        ) : (
+          <section>
+            <h2 className="font-semibold text-foreground mb-3 flex items-center gap-2">
+              <Bell className="h-5 w-5 text-primary" />
+              Stage Notification Rules
+            </h2>
 
-          <div className="space-y-2">
-            {rules.map((rule, idx) => {
-              const isExpanded = expandedStage === rule.workflow_stage_id;
-              const primaryCount = rule.recipients.filter((r) => r.recipient_type === "primary").length;
-              const escalationCount = rule.recipients.filter((r) => r.recipient_type === "escalation").length;
+            <div className="space-y-2">
+              {rules.map((rule, idx) => {
+                const isExpanded = expandedStage === rule.workflow_stage_id;
+                const primaryCount = rule.recipients.filter((r) => r.recipient_type === "primary").length;
 
-              return (
-                <div key={rule.workflow_stage_id} className="rounded-lg border border-border bg-card overflow-hidden">
-                  {/* Stage Header */}
-                  <div
-                    className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-muted/30 transition-colors"
-                    onClick={() => setExpandedStage(isExpanded ? null : rule.workflow_stage_id)}
-                  >
-                    <Switch
-                      checked={rule.notifications_enabled}
-                      onCheckedChange={(v) => { updateRule(idx, { notifications_enabled: v }); }}
-                      onClick={(e) => e.stopPropagation()}
-                      disabled={!isDealershipAdmin}
-                    />
-                    <span className="font-medium text-foreground flex-1">{rule.stage_name}</span>
-                    {rule.notifications_enabled && (
-                      <div className="flex items-center gap-2">
-                        {primaryCount > 0 && (
-                          <Badge variant="outline" className="text-xs gap-1">
-                            <Users className="h-3 w-3" /> {primaryCount}
-                          </Badge>
-                        )}
-                        {rule.reminder_enabled && (
-                          <Badge variant="outline" className="text-xs gap-1">
-                            <Clock className="h-3 w-3" /> {rule.reminder_after_minutes}m
-                          </Badge>
-                        )}
-                        {rule.escalation_enabled && (
-                          <Badge variant="outline" className="text-xs gap-1 text-amber-600 border-amber-300">
-                            <AlertTriangle className="h-3 w-3" /> {rule.escalation_after_minutes}m
-                          </Badge>
-                        )}
+                return (
+                  <div key={rule.workflow_stage_id} className="rounded-lg border border-border bg-card overflow-hidden">
+                    <div
+                      className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-muted/30 transition-colors"
+                      onClick={() => setExpandedStage(isExpanded ? null : rule.workflow_stage_id)}
+                    >
+                      <Switch
+                        checked={rule.notifications_enabled}
+                        onCheckedChange={(v) => { updateRule(idx, { notifications_enabled: v }); }}
+                        onClick={(e) => e.stopPropagation()}
+                        disabled={!isDealershipAdmin}
+                      />
+                      <span className="font-medium text-foreground flex-1">{rule.stage_name}</span>
+                      {rule.notifications_enabled && (
+                        <div className="flex items-center gap-2">
+                          {primaryCount > 0 && (
+                            <Badge variant="outline" className="text-xs gap-1">
+                              <Users className="h-3 w-3" /> {primaryCount}
+                            </Badge>
+                          )}
+                          {rule.reminder_enabled && (
+                            <Badge variant="outline" className="text-xs gap-1">
+                              <Clock className="h-3 w-3" /> {rule.reminder_after_minutes}m
+                            </Badge>
+                          )}
+                          {rule.escalation_enabled && (
+                            <Badge variant="outline" className="text-xs gap-1">
+                              <AlertTriangle className="h-3 w-3" /> {rule.escalation_after_minutes}m
+                            </Badge>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {isExpanded && (
+                      <div className="border-t border-border px-4 py-4 space-y-4 bg-muted/20">
+                        <div>
+                          <Label className="text-sm font-medium mb-2 block">Primary Recipients</Label>
+                          <div className="space-y-1.5">
+                            {teamMembers.map((m: any) => {
+                              const isSelected = rule.recipients.some(
+                                (r) => r.user_id === m.user_id && r.recipient_type === "primary"
+                              );
+                              return (
+                                <label key={m.user_id} className="flex items-center gap-2 text-sm cursor-pointer">
+                                  <Checkbox
+                                    checked={isSelected}
+                                    onCheckedChange={() => toggleRecipient(idx, m.user_id, "primary")}
+                                    disabled={!isDealershipAdmin}
+                                  />
+                                  <span className="text-foreground">{m.first_name} {m.last_name}</span>
+                                  <span className="text-muted-foreground text-xs">({m.email})</span>
+                                </label>
+                              );
+                            })}
+                            {teamMembers.length === 0 && (
+                              <p className="text-xs text-muted-foreground">No team members assigned to this dealership</p>
+                            )}
+                          </div>
+                        </div>
+
+                        <div>
+                          <Label className="text-sm font-medium mb-2 block">Escalation Recipients</Label>
+                          <div className="space-y-1.5">
+                            {teamMembers.map((m: any) => {
+                              const isSelected = rule.recipients.some(
+                                (r) => r.user_id === m.user_id && r.recipient_type === "escalation"
+                              );
+                              return (
+                                <label key={m.user_id} className="flex items-center gap-2 text-sm cursor-pointer">
+                                  <Checkbox
+                                    checked={isSelected}
+                                    onCheckedChange={() => toggleRecipient(idx, m.user_id, "escalation")}
+                                    disabled={!isDealershipAdmin}
+                                  />
+                                  <span className="text-foreground">{m.first_name} {m.last_name}</span>
+                                  <span className="text-muted-foreground text-xs">({m.email})</span>
+                                </label>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2">
+                              <Switch
+                                checked={rule.reminder_enabled}
+                                onCheckedChange={(v) => updateRule(idx, { reminder_enabled: v })}
+                                disabled={!isDealershipAdmin}
+                              />
+                              <Label className="text-sm">Reminder</Label>
+                            </div>
+                            {rule.reminder_enabled && (
+                              <div className="space-y-1">
+                                <Label className="text-xs text-muted-foreground">After (minutes)</Label>
+                                <Input
+                                  type="number"
+                                  value={rule.reminder_after_minutes}
+                                  onChange={(e) => updateRule(idx, { reminder_after_minutes: parseInt(e.target.value) || 0 })}
+                                  className="h-8"
+                                  disabled={!isDealershipAdmin}
+                                />
+                              </div>
+                            )}
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2">
+                              <Switch
+                                checked={rule.escalation_enabled}
+                                onCheckedChange={(v) => updateRule(idx, { escalation_enabled: v })}
+                                disabled={!isDealershipAdmin}
+                              />
+                              <Label className="text-sm">Escalation</Label>
+                            </div>
+                            {rule.escalation_enabled && (
+                              <div className="space-y-1">
+                                <Label className="text-xs text-muted-foreground">After (minutes)</Label>
+                                <Input
+                                  type="number"
+                                  value={rule.escalation_after_minutes}
+                                  onChange={(e) => updateRule(idx, { escalation_after_minutes: parseInt(e.target.value) || 0 })}
+                                  className="h-8"
+                                  disabled={!isDealershipAdmin}
+                                />
+                              </div>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     )}
                   </div>
-
-                  {/* Expanded Config */}
-                  {isExpanded && (
-                    <div className="border-t border-border px-4 py-4 space-y-4 bg-muted/20">
-                      {/* Recipients */}
-                      <div>
-                        <Label className="text-sm font-medium mb-2 block">Primary Recipients</Label>
-                        <div className="space-y-1.5">
-                          {teamMembers.map((m: any) => {
-                            const isSelected = rule.recipients.some(
-                              (r) => r.user_id === m.user_id && r.recipient_type === "primary"
-                            );
-                            return (
-                              <label key={m.user_id} className="flex items-center gap-2 text-sm cursor-pointer">
-                                <Checkbox
-                                  checked={isSelected}
-                                  onCheckedChange={() => toggleRecipient(idx, m.user_id, "primary")}
-                                  disabled={!isDealershipAdmin}
-                                />
-                                <span className="text-foreground">{m.first_name} {m.last_name}</span>
-                                <span className="text-muted-foreground text-xs">({m.email})</span>
-                              </label>
-                            );
-                          })}
-                          {teamMembers.length === 0 && (
-                            <p className="text-xs text-muted-foreground">No team members assigned to this dealership</p>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Escalation Recipients */}
-                      <div>
-                        <Label className="text-sm font-medium mb-2 block">Escalation Recipients</Label>
-                        <div className="space-y-1.5">
-                          {teamMembers.map((m: any) => {
-                            const isSelected = rule.recipients.some(
-                              (r) => r.user_id === m.user_id && r.recipient_type === "escalation"
-                            );
-                            return (
-                              <label key={m.user_id} className="flex items-center gap-2 text-sm cursor-pointer">
-                                <Checkbox
-                                  checked={isSelected}
-                                  onCheckedChange={() => toggleRecipient(idx, m.user_id, "escalation")}
-                                  disabled={!isDealershipAdmin}
-                                />
-                                <span className="text-foreground">{m.first_name} {m.last_name}</span>
-                                <span className="text-muted-foreground text-xs">({m.email})</span>
-                              </label>
-                            );
-                          })}
-                        </div>
-                      </div>
-
-                      {/* Timing */}
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-2">
-                            <Switch
-                              checked={rule.reminder_enabled}
-                              onCheckedChange={(v) => updateRule(idx, { reminder_enabled: v })}
-                              disabled={!isDealershipAdmin}
-                            />
-                            <Label className="text-sm">Reminder</Label>
-                          </div>
-                          {rule.reminder_enabled && (
-                            <div className="space-y-1">
-                              <Label className="text-xs text-muted-foreground">After (minutes)</Label>
-                              <Input
-                                type="number"
-                                value={rule.reminder_after_minutes}
-                                onChange={(e) => updateRule(idx, { reminder_after_minutes: parseInt(e.target.value) || 0 })}
-                                className="h-8"
-                                disabled={!isDealershipAdmin}
-                              />
-                            </div>
-                          )}
-                        </div>
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-2">
-                            <Switch
-                              checked={rule.escalation_enabled}
-                              onCheckedChange={(v) => updateRule(idx, { escalation_enabled: v })}
-                              disabled={!isDealershipAdmin}
-                            />
-                            <Label className="text-sm">Escalation</Label>
-                          </div>
-                          {rule.escalation_enabled && (
-                            <div className="space-y-1">
-                              <Label className="text-xs text-muted-foreground">After (minutes)</Label>
-                              <Input
-                                type="number"
-                                value={rule.escalation_after_minutes}
-                                onChange={(e) => updateRule(idx, { escalation_after_minutes: parseInt(e.target.value) || 0 })}
-                                className="h-8"
-                                disabled={!isDealershipAdmin}
-                              />
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </section>
+                );
+              })}
+            </div>
+          </section>
+        )}
       </div>
     </AppLayout>
   );
