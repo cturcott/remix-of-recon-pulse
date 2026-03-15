@@ -26,6 +26,11 @@ import Approvals from "./pages/Approvals";
 import Settings from "./pages/Settings";
 import ChangePassword from "./pages/ChangePassword";
 import NotFound from "./pages/NotFound";
+import ReconAgingReport from "./pages/reports/ReconAgingReport";
+import StageBottleneckReport from "./pages/reports/StageBottleneckReport";
+import WipQueueReport from "./pages/reports/WipQueueReport";
+import TimeToFLRReport from "./pages/reports/TimeToFLRReport";
+import ExceptionReport from "./pages/reports/ExceptionReport";
 
 const queryClient = new QueryClient();
 
