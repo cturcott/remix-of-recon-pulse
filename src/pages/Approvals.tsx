@@ -166,44 +166,45 @@ export default function Approvals() {
 
   return (
     <AppLayout>
-      <div className="mb-6 flex items-center justify-between">
+      {/* Header */}
+      <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-            <FileText className="h-6 w-6 text-primary" />
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
+            <FileText className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
             Approvals
             {pendingCount > 0 && (
               <Badge className="ml-1 bg-amber-500 text-white">{pendingCount}</Badge>
             )}
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">Review and approve service work items across all vehicles</p>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">Review and approve service work items</p>
         </div>
 
         {canApprove && pendingSelected.length > 0 && (
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground">{pendingSelected.length} selected</span>
             <Button size="sm" onClick={() => handleApprove(pendingSelected.map((i) => i.id))} disabled={approveMutation.isPending}>
-              <Check className="h-4 w-4 mr-1" />Approve All
+              <Check className="h-4 w-4 mr-1" />Approve
             </Button>
             <Button size="sm" variant="destructive" onClick={() => openDenyDialog(null)} disabled={denyMutation.isPending}>
-              <X className="h-4 w-4 mr-1" />Deny All
+              <X className="h-4 w-4 mr-1" />Deny
             </Button>
           </div>
         )}
       </div>
 
       {/* Filters */}
-      <div className="flex items-center gap-3 mb-4">
-        <div className="relative flex-1 max-w-sm">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 mb-4">
+        <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search by description, VIN, stock #, vehicle..."
+            placeholder="Search description, VIN, stock #..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9"
+            className="pl-9 text-[16px] sm:text-sm"
           />
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-40">
+          <SelectTrigger className="w-full sm:w-40">
             <Filter className="h-4 w-4 mr-1" />
             <SelectValue />
           </SelectTrigger>
@@ -215,7 +216,7 @@ export default function Approvals() {
         </Select>
       </div>
 
-      {/* Table */}
+      {/* Content */}
       {isLoading ? (
         <div className="flex items-center justify-center py-16 text-muted-foreground">
           <Loader2 className="h-5 w-5 animate-spin mr-2" />Loading...
@@ -227,77 +228,129 @@ export default function Approvals() {
           <p className="text-sm">{statusFilter === "pending" ? "All service work items have been processed." : "No items match your filters."}</p>
         </div>
       ) : (
-        <div className="rounded-xl border border-border bg-card overflow-hidden">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border bg-muted/40">
-                {canApprove && statusFilter === "pending" && (
-                  <th className="w-10 px-3 py-3">
-                    <Checkbox checked={selectedIds.size === filtered.length && filtered.length > 0} onCheckedChange={toggleSelectAll} />
-                  </th>
-                )}
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Vehicle</th>
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Description</th>
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Category</th>
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Vendor</th>
-                <th className="px-4 py-3 text-right font-medium text-muted-foreground">Est. Cost</th>
-                <th className="px-4 py-3 text-center font-medium text-muted-foreground">Status</th>
-                {canApprove && <th className="px-4 py-3 text-right font-medium text-muted-foreground">Actions</th>}
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((item) => (
-                <tr key={item.id} className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors">
-                  {canApprove && statusFilter === "pending" && (
-                    <td className="px-3 py-3">
-                      <Checkbox checked={selectedIds.has(item.id)} onCheckedChange={() => toggleSelect(item.id)} />
-                    </td>
-                  )}
-                  <td className="px-4 py-3">
-                    <Link to={`/vehicle/${item.vehicle_id}`} className="flex items-center gap-2 text-foreground hover:text-primary transition-colors group">
-                      <Car className="h-4 w-4 text-muted-foreground group-hover:text-primary" />
-                      <div>
-                        <p className="font-medium">{vehicleLabel(item.vehicles)}</p>
-                        {item.vehicles?.stock_number && (
-                          <p className="text-xs text-muted-foreground">Stk# {item.vehicles.stock_number}</p>
-                        )}
-                      </div>
-                      <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3 text-foreground max-w-xs truncate">{item.description}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{item.category || "—"}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{item.vendor_name || "—"}</td>
-                  <td className="px-4 py-3 text-right font-mono text-foreground">
-                    {item.estimated_cost != null ? `$${Number(item.estimated_cost).toLocaleString()}` : "—"}
-                  </td>
-                  <td className="px-4 py-3 text-center">{statusBadge(item.status)}</td>
-                  {canApprove && (
-                    <td className="px-4 py-3 text-right">
-                      {item.status === "pending" ? (
-                        <div className="flex items-center justify-end gap-1">
-                          <Button size="sm" variant="ghost" className="h-7 px-2 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50" onClick={() => handleApprove([item.id])} disabled={approveMutation.isPending}>
-                            <Check className="h-3.5 w-3.5" />
-                          </Button>
-                          <Button size="sm" variant="ghost" className="h-7 px-2 text-red-600 hover:text-red-700 hover:bg-red-50" onClick={() => openDenyDialog(item.id)} disabled={denyMutation.isPending}>
-                            <X className="h-3.5 w-3.5" />
-                          </Button>
-                        </div>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">—</span>
+        <>
+          {/* Mobile Card View */}
+          <div className="sm:hidden space-y-3">
+            {filtered.map((item) => (
+              <div key={item.id} className="rounded-xl border border-border bg-card p-4 space-y-3">
+                <div className="flex items-start justify-between gap-2">
+                  <Link to={`/vehicle/${item.vehicle_id}`} className="flex items-center gap-2 text-foreground hover:text-primary transition-colors min-w-0">
+                    <Car className="h-4 w-4 text-muted-foreground shrink-0" />
+                    <div className="min-w-0">
+                      <p className="font-medium text-sm truncate">{vehicleLabel(item.vehicles)}</p>
+                      {item.vehicles?.stock_number && (
+                        <p className="text-xs text-muted-foreground">Stk# {item.vehicles.stock_number}</p>
                       )}
-                    </td>
+                    </div>
+                  </Link>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {statusBadge(item.status)}
+                    {canApprove && statusFilter === "pending" && item.status === "pending" && (
+                      <Checkbox checked={selectedIds.has(item.id)} onCheckedChange={() => toggleSelect(item.id)} />
+                    )}
+                  </div>
+                </div>
+
+                <p className="text-sm text-foreground">{item.description}</p>
+
+                <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                  {item.category && <span>Category: {item.category}</span>}
+                  {item.vendor_name && <span>Vendor: {item.vendor_name}</span>}
+                  {item.estimated_cost != null && (
+                    <span className="font-mono text-foreground">
+                      <DollarSign className="inline h-3 w-3" />
+                      {Number(item.estimated_cost).toLocaleString()}
+                    </span>
                   )}
+                </div>
+
+                {canApprove && item.status === "pending" && (
+                  <div className="flex gap-2 pt-1">
+                    <Button size="sm" className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => handleApprove([item.id])} disabled={approveMutation.isPending}>
+                      <Check className="h-4 w-4 mr-1" />Approve
+                    </Button>
+                    <Button size="sm" variant="destructive" className="flex-1" onClick={() => openDenyDialog(item.id)} disabled={denyMutation.isPending}>
+                      <X className="h-4 w-4 mr-1" />Deny
+                    </Button>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop Table View */}
+          <div className="hidden sm:block rounded-xl border border-border bg-card overflow-hidden">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border bg-muted/40">
+                  {canApprove && statusFilter === "pending" && (
+                    <th className="w-10 px-3 py-3">
+                      <Checkbox checked={selectedIds.size === filtered.length && filtered.length > 0} onCheckedChange={toggleSelectAll} />
+                    </th>
+                  )}
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Vehicle</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Description</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Category</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Vendor</th>
+                  <th className="px-4 py-3 text-right font-medium text-muted-foreground">Est. Cost</th>
+                  <th className="px-4 py-3 text-center font-medium text-muted-foreground">Status</th>
+                  {canApprove && <th className="px-4 py-3 text-right font-medium text-muted-foreground">Actions</th>}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {filtered.map((item) => (
+                  <tr key={item.id} className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors">
+                    {canApprove && statusFilter === "pending" && (
+                      <td className="px-3 py-3">
+                        <Checkbox checked={selectedIds.has(item.id)} onCheckedChange={() => toggleSelect(item.id)} />
+                      </td>
+                    )}
+                    <td className="px-4 py-3">
+                      <Link to={`/vehicle/${item.vehicle_id}`} className="flex items-center gap-2 text-foreground hover:text-primary transition-colors group">
+                        <Car className="h-4 w-4 text-muted-foreground group-hover:text-primary" />
+                        <div>
+                          <p className="font-medium">{vehicleLabel(item.vehicles)}</p>
+                          {item.vehicles?.stock_number && (
+                            <p className="text-xs text-muted-foreground">Stk# {item.vehicles.stock_number}</p>
+                          )}
+                        </div>
+                        <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </Link>
+                    </td>
+                    <td className="px-4 py-3 text-foreground max-w-xs truncate">{item.description}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{item.category || "—"}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{item.vendor_name || "—"}</td>
+                    <td className="px-4 py-3 text-right font-mono text-foreground">
+                      {item.estimated_cost != null ? `$${Number(item.estimated_cost).toLocaleString()}` : "—"}
+                    </td>
+                    <td className="px-4 py-3 text-center">{statusBadge(item.status)}</td>
+                    {canApprove && (
+                      <td className="px-4 py-3 text-right">
+                        {item.status === "pending" ? (
+                          <div className="flex items-center justify-end gap-1">
+                            <Button size="sm" variant="ghost" className="h-7 px-2 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50" onClick={() => handleApprove([item.id])} disabled={approveMutation.isPending}>
+                              <Check className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button size="sm" variant="ghost" className="h-7 px-2 text-red-600 hover:text-red-700 hover:bg-red-50" onClick={() => openDenyDialog(item.id)} disabled={denyMutation.isPending}>
+                              <X className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        )}
+                      </td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
 
       {/* Deny Dialog */}
       <Dialog open={denyDialogOpen} onOpenChange={setDenyDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Deny Service Item{denyingId ? "" : "s"}</DialogTitle>
           </DialogHeader>
@@ -305,7 +358,7 @@ export default function Approvals() {
             <p className="text-sm text-muted-foreground">
               {denyingId ? "Provide an optional reason for denying this item." : `Deny ${pendingSelected.length} selected item(s).`}
             </p>
-            <Textarea placeholder="Reason for denial (optional)" value={denyReason} onChange={(e) => setDenyReason(e.target.value)} rows={3} />
+            <Textarea placeholder="Reason for denial (optional)" value={denyReason} onChange={(e) => setDenyReason(e.target.value)} rows={3} className="text-[16px] sm:text-sm" />
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setDenyDialogOpen(false)}>Cancel</Button>
               <Button variant="destructive" onClick={handleDenyConfirm} disabled={denyMutation.isPending}>
