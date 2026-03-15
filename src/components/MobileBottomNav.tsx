@@ -15,10 +15,12 @@ const tabs = [
 ];
 
 const moreItems = [
+  { label: "Aging Report", icon: BarChart3, path: "/reports/aging" },
+  { label: "Bottleneck", icon: BarChart3, path: "/reports/bottleneck" },
+  { label: "WIP Queue", icon: BarChart3, path: "/reports/wip" },
+  { label: "Time to FLR", icon: BarChart3, path: "/reports/flr" },
+  { label: "Exceptions", icon: BarChart3, path: "/reports/exceptions" },
   { label: "CSV Import", icon: Upload, path: "/import/settings" },
-  { label: "Vendors", icon: TruckIcon, path: "/vendors" },
-  { label: "Parts", icon: Package, path: "/parts" },
-  { label: "Reports", icon: BarChart3, path: "/reports" },
   { label: "Team", icon: Users, path: "/team" },
   { label: "Workflow", icon: Workflow, path: "/settings/workflow" },
   { label: "Notifications", icon: Bell, path: "/settings/notifications" },
