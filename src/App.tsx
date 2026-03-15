@@ -31,6 +31,7 @@ import StageBottleneckReport from "./pages/reports/StageBottleneckReport";
 import WipQueueReport from "./pages/reports/WipQueueReport";
 import TimeToFLRReport from "./pages/reports/TimeToFLRReport";
 import ExceptionReport from "./pages/reports/ExceptionReport";
+import ReportsDashboard from "./pages/reports/ReportsDashboard";
 
 const queryClient = new QueryClient();
 
