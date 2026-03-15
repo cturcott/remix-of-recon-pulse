@@ -79,6 +79,34 @@ export default function AppTopNav() {
             </Link>
           ))}
 
+          {/* Reports dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                className={cn(
+                  "flex items-center gap-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+                  isInGroup(reportMenuItems)
+                    ? "bg-accent text-accent-foreground"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                )}
+              >
+                <BarChart3 className="h-4 w-4" />
+                Reports
+                <ChevronDown className="h-3 w-3 ml-0.5" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-48">
+              {reportMenuItems.map((item) => (
+                <DropdownMenuItem key={item.path} asChild>
+                  <Link to={item.path} className="flex items-center gap-2">
+                    <item.icon className="h-4 w-4" />
+                    {item.label}
+                  </Link>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           {/* Manage dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
