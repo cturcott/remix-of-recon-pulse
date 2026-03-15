@@ -714,6 +714,53 @@ export type Database = {
           },
         ]
       }
+      saved_report_views: {
+        Row: {
+          created_at: string
+          dealership_id: string | null
+          filters_json: Json
+          id: string
+          is_default: boolean
+          name: string
+          report_type: string
+          sort_json: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          dealership_id?: string | null
+          filters_json?: Json
+          id?: string
+          is_default?: boolean
+          name: string
+          report_type: string
+          sort_json?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          dealership_id?: string | null
+          filters_json?: Json
+          id?: string
+          is_default?: boolean
+          name?: string
+          report_type?: string
+          sort_json?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_report_views_dealership_id_fkey"
+            columns: ["dealership_id"]
+            isOneToOne: false
+            referencedRelation: "dealerships"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stage_notification_rule_recipients: {
         Row: {
           created_at: string
