@@ -2,7 +2,7 @@
   "name": "Recon Pulse",
   "short_name": "ReconPulse",
   "description": "Dealership Vehicle Reconditioning Tracker",
-  "start_url": "/",
+  "start_url": "/auth",
   "display": "standalone",
   "background_color": "#0d9488",
   "theme_color": "#0d9488",
