@@ -52,7 +52,7 @@ const DEFAULT_STAGES = [
 ];
 
 export default function WorkflowSettings() {
-  const { currentDealership } = useDealership();
+  const { currentDealership, loading: dealershipLoading } = useDealership();
   const { isPlatformAdmin, roles } = useAuth();
   const queryClient = useQueryClient();
   const [stages, setStages] = useState<WorkflowStage[]>([]);
