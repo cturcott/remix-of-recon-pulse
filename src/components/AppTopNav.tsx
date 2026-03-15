@@ -1,4 +1,4 @@
-import { Car, LayoutDashboard, Kanban, FileText, Settings, Users, Upload, Workflow, Bell, LogOut, Shield, ChevronDown, BarChart3, TruckIcon, Package } from "lucide-react";
+import { Car, LayoutDashboard, Kanban, FileText, Settings, Users, Upload, Workflow, Bell, LogOut, Shield, ChevronDown, BarChart3, TruckIcon, Package, Clock, AlertTriangle, Layers, Timer, AlertCircle } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import DealershipSwitcher from "./DealershipSwitcher";
@@ -16,6 +16,14 @@ const primaryLinks = [
   { label: "Overview", icon: Kanban, path: "/command-center" },
   { label: "Vehicles", icon: Car, path: "/vehicles" },
   { label: "Approvals", icon: FileText, path: "/approvals" },
+];
+
+const reportMenuItems = [
+  { label: "Recon Aging", icon: Clock, path: "/reports/aging" },
+  { label: "Stage Bottleneck", icon: Layers, path: "/reports/bottleneck" },
+  { label: "WIP Queue", icon: Car, path: "/reports/wip" },
+  { label: "Time to FLR", icon: Timer, path: "/reports/flr" },
+  { label: "Exceptions", icon: AlertCircle, path: "/reports/exceptions" },
 ];
 
 const manageMenuItems = [
