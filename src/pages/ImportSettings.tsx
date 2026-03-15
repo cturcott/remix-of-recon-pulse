@@ -41,7 +41,7 @@ const RECON_FIELDS = [
 ];
 
 const TRANSFORMS = [
-  { value: "", label: "None" },
+  { value: "none", label: "None" },
   { value: "trim", label: "Trim whitespace" },
   { value: "uppercase", label: "UPPERCASE" },
   { value: "lowercase", label: "lowercase" },
@@ -787,9 +787,10 @@ export default function ImportSettings() {
             </div>
             <div className="space-y-1.5">
               <Label>Default Starting Stage</Label>
-              <Select value={defaultStageId} onValueChange={setDefaultStageId}>
+              <Select value={defaultStageId || "auto"} onValueChange={v => setDefaultStageId(v === "auto" ? "" : v)}>
                 <SelectTrigger><SelectValue placeholder="Auto (first stage)" /></SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="auto">Auto (first stage)</SelectItem>
                   {(stages || []).map(s => (
                     <SelectItem key={s.id} value={s.id}>
                       {s.name} {s.is_start_stage ? "(start)" : ""}
@@ -1093,7 +1094,7 @@ export default function ImportSettings() {
                                 )}
                               </td>
                               <td className="px-4 py-2">
-                                <Select value={rule.transform} onValueChange={v => updateMappingRule(i, "transform", v)}>
+                                <Select value={rule.transform || "none"} onValueChange={v => updateMappingRule(i, "transform", v)}>
                                   <SelectTrigger className="text-xs h-8"><SelectValue /></SelectTrigger>
                                   <SelectContent>
                                     {TRANSFORMS.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
