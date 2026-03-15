@@ -1093,7 +1093,7 @@ export default function ImportSettings() {
                                 )}
                               </td>
                               <td className="px-4 py-2">
-                                <Select value={rule.transform} onValueChange={v => updateMappingRule(i, "transform", v)}>
+                                <Select value={rule.transform || "none"} onValueChange={v => updateMappingRule(i, "transform", v)}>
                                   <SelectTrigger className="text-xs h-8"><SelectValue /></SelectTrigger>
                                   <SelectContent>
                                     {TRANSFORMS.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
