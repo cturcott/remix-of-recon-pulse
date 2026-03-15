@@ -162,7 +162,7 @@ export default function CommandCenter() {
 
   // Fetch stage assignees to check move permissions
   const { data: stageAssigneeMap = {} } = useQuery<Record<string, string[]>>({
-    queryKey: ["stage-assignees", currentDealership?.id],
+    queryKey: ["stage-assignee-map", currentDealership?.id],
     queryFn: async () => {
       if (!currentDealership) return {};
       const { data, error } = await supabase

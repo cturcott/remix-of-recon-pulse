@@ -110,8 +110,8 @@ export default function WorkflowSettings() {
   });
 
   // Fetch existing stage assignees
-  const { data: stageAssignees = [], refetch: refetchAssignees } = useQuery({
-    queryKey: ["stage-assignees", currentDealership?.id],
+  const { data: stageAssigneesData = [], refetch: refetchAssignees } = useQuery<StageAssignee[]>({
+    queryKey: ["workflow-stage-assignees-list", currentDealership?.id],
     queryFn: async () => {
       if (!currentDealership) return [];
       const stageIds = (fetchedStages ?? []).map((s) => s.id);
@@ -125,6 +125,8 @@ export default function WorkflowSettings() {
     },
     enabled: !!currentDealership && !!fetchedStages && fetchedStages.length > 0,
   });
+
+  const stageAssignees = Array.isArray(stageAssigneesData) ? stageAssigneesData : [];
 
   useEffect(() => {
     if (fetchedStages) {
