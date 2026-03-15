@@ -19,6 +19,7 @@ const primaryLinks = [
 ];
 
 const reportMenuItems = [
+  { label: "Reports Dashboard", icon: BarChart3, path: "/reports" },
   { label: "Recon Aging", icon: Clock, path: "/reports/aging" },
   { label: "Stage Bottleneck", icon: Layers, path: "/reports/bottleneck" },
   { label: "WIP Queue", icon: Car, path: "/reports/wip" },
