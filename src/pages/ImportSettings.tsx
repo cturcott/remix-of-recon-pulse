@@ -787,9 +787,10 @@ export default function ImportSettings() {
             </div>
             <div className="space-y-1.5">
               <Label>Default Starting Stage</Label>
-              <Select value={defaultStageId} onValueChange={setDefaultStageId}>
+              <Select value={defaultStageId || "auto"} onValueChange={v => setDefaultStageId(v === "auto" ? "" : v)}>
                 <SelectTrigger><SelectValue placeholder="Auto (first stage)" /></SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="auto">Auto (first stage)</SelectItem>
                   {(stages || []).map(s => (
                     <SelectItem key={s.id} value={s.id}>
                       {s.name} {s.is_start_stage ? "(start)" : ""}
