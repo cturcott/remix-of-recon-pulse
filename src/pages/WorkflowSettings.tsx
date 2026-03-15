@@ -61,7 +61,7 @@ export default function WorkflowSettings() {
 
   const isDealershipAdmin = isPlatformAdmin || roles.includes("dealership_admin");
 
-  const { data: fetchedStages, isLoading } = useQuery({
+  const { data: fetchedStages, isLoading: stagesLoading, error: stagesError } = useQuery({
     queryKey: ["workflow-stages", currentDealership?.id],
     queryFn: async () => {
       if (!currentDealership) return [];

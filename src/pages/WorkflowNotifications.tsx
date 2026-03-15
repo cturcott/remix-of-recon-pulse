@@ -28,7 +28,7 @@ interface StageRule {
 }
 
 export default function WorkflowNotifications() {
-  const { currentDealership } = useDealership();
+  const { currentDealership, loading: dealershipLoading } = useDealership();
   const { user, isPlatformAdmin, roles } = useAuth();
   const queryClient = useQueryClient();
   const isDealershipAdmin = isPlatformAdmin || roles.includes("dealership_admin");
@@ -36,9 +36,8 @@ export default function WorkflowNotifications() {
   const [rules, setRules] = useState<StageRule[]>([]);
   const [saving, setSaving] = useState(false);
 
-
   // Get stages
-  const { data: stages = [] } = useQuery({
+  const { data: stages = [], isLoading: stagesLoading, error: stagesError } = useQuery({
     queryKey: ["workflow-stages", currentDealership?.id],
     queryFn: async () => {
       if (!currentDealership) return [];
@@ -55,7 +54,7 @@ export default function WorkflowNotifications() {
   });
 
   // Get existing rules
-  const { data: existingRules = [] } = useQuery({
+  const { data: existingRules = [], isLoading: rulesLoading, error: rulesError } = useQuery({
     queryKey: ["notification-rules", currentDealership?.id],
     queryFn: async () => {
       if (!currentDealership) return [];
@@ -70,7 +69,7 @@ export default function WorkflowNotifications() {
   });
 
   // Get existing recipients
-  const { data: existingRecipients = [] } = useQuery({
+  const { data: existingRecipients = [], isLoading: recipientsLoading, error: recipientsError } = useQuery({
     queryKey: ["notification-recipients", currentDealership?.id],
     queryFn: async () => {
       if (!currentDealership || existingRules.length === 0) return [];
@@ -86,7 +85,7 @@ export default function WorkflowNotifications() {
   });
 
   // Get team members
-  const { data: teamMembers = [] } = useQuery({
+  const { data: teamMembers = [], isLoading: membersLoading, error: membersError } = useQuery({
     queryKey: ["team-for-notifications", currentDealership?.id],
     queryFn: async () => {
       if (!currentDealership) return [];
