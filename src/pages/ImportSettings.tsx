@@ -41,7 +41,7 @@ const RECON_FIELDS = [
 ];
 
 const TRANSFORMS = [
-  { value: "", label: "None" },
+  { value: "none", label: "None" },
   { value: "trim", label: "Trim whitespace" },
   { value: "uppercase", label: "UPPERCASE" },
   { value: "lowercase", label: "lowercase" },
