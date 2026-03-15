@@ -59,6 +59,11 @@ const AppRoutes = () => (
     <Route path="/recon-board" element={<Navigate to="/command-center" replace />} />
     <Route path="/vehicles" element={<ProtectedRoute><Vehicles /></ProtectedRoute>} />
     <Route path="/approvals" element={<ProtectedRoute><Approvals /></ProtectedRoute>} />
+    <Route path="/reports/aging" element={<ProtectedRoute><ReconAgingReport /></ProtectedRoute>} />
+    <Route path="/reports/bottleneck" element={<ProtectedRoute><StageBottleneckReport /></ProtectedRoute>} />
+    <Route path="/reports/wip" element={<ProtectedRoute><WipQueueReport /></ProtectedRoute>} />
+    <Route path="/reports/flr" element={<ProtectedRoute><TimeToFLRReport /></ProtectedRoute>} />
+    <Route path="/reports/exceptions" element={<ProtectedRoute><ExceptionReport /></ProtectedRoute>} />
     <Route path="/vehicle/:id" element={<ProtectedRoute><VehicleDetail /></ProtectedRoute>} />
     <Route path="/settings/workflow" element={<ProtectedRoute><WorkflowSettings /></ProtectedRoute>} />
     <Route path="/settings/notifications" element={<ProtectedRoute><WorkflowNotifications /></ProtectedRoute>} />

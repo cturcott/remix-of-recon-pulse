@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useAuth } from "@/contexts/AuthContext";
 import {
-  Users, Settings, Workflow, Bell, Upload, TruckIcon, Package, BarChart3, LogOut, Shield,
+  Users, Settings, Workflow, Bell, Upload, BarChart3, LogOut, Shield,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
