@@ -52,7 +52,7 @@ const DEFAULT_STAGES = [
 ];
 
 export default function WorkflowSettings() {
-  const { currentDealership } = useDealership();
+  const { currentDealership, loading: dealershipLoading } = useDealership();
   const { isPlatformAdmin, roles } = useAuth();
   const queryClient = useQueryClient();
   const [stages, setStages] = useState<WorkflowStage[]>([]);
@@ -370,8 +370,10 @@ export default function WorkflowSettings() {
         </div>
       </div>
 
-      {isLoading ? (
+      {dealershipLoading || isLoading ? (
         <div className="flex items-center justify-center py-12 text-muted-foreground">Loading stages...</div>
+      ) : !currentDealership ? (
+        <div className="flex items-center justify-center py-12 text-muted-foreground">No dealership selected</div>
       ) : (
         <div className="space-y-2">
           {stages.map((stage, idx) => {
