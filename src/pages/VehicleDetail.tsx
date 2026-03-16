@@ -520,6 +520,15 @@ export default function VehicleDetail() {
             )}
           </div>
 
+          {/* Vehicle Tasks */}
+          <div className="mt-4">
+            <VehicleTaskSection
+              vehicleId={id!}
+              stages={stages.map((s) => ({ id: s.id, name: s.name }))}
+              teamMembers={[]}
+            />
+          </div>
+
           {/* Notification History */}
           <NotificationHistory vehicleId={id!} />
 
