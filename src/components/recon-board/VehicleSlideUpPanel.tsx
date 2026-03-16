@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { ScrollArea } from "@/components/ui/scroll-area";
+
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
@@ -160,7 +160,7 @@ export default function VehicleSlideUpPanel({
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="max-h-[85vh] flex flex-col overflow-hidden focus:outline-none">
+      <DrawerContent className="max-h-[85vh] flex flex-col focus:outline-none">
         <DrawerHeader className="flex items-start justify-between gap-3 pb-2">
           <div className="min-w-0 flex-1">
             <DrawerTitle className="text-lg font-bold text-foreground">
@@ -194,7 +194,7 @@ export default function VehicleSlideUpPanel({
           </Button>
         </DrawerHeader>
 
-        <ScrollArea className="flex-1 min-h-0">
+        <div className="flex-1 min-h-0 overflow-y-auto">
           <div className="px-4 pb-6 space-y-5">
             {/* Vehicle details grid */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -357,7 +357,7 @@ export default function VehicleSlideUpPanel({
               )}
             </div>
           </div>
-        </ScrollArea>
+        </div>
       </DrawerContent>
     </Drawer>
   );
