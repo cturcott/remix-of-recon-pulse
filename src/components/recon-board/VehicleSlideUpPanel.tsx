@@ -357,7 +357,7 @@ export default function VehicleSlideUpPanel({
               )}
             </div>
           </div>
-        </ScrollArea>
+        </div>
       </DrawerContent>
     </Drawer>
   );
