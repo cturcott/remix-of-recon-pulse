@@ -36,6 +36,7 @@ import ApprovalLagReport from "./pages/reports/ApprovalLagReport";
 import PartsHoldReport from "./pages/reports/PartsHoldReport";
 import FLROutputReport from "./pages/reports/FLROutputReport";
 import ReconCostReport from "./pages/reports/ReconCostReport";
+import MyTasks from "./pages/MyTasks";
 
 const queryClient = new QueryClient();
 
@@ -64,6 +65,7 @@ const AppRoutes = () => (
     <Route path="/recon-board" element={<Navigate to="/command-center" replace />} />
     <Route path="/vehicles" element={<ProtectedRoute><Vehicles /></ProtectedRoute>} />
     <Route path="/approvals" element={<ProtectedRoute><Approvals /></ProtectedRoute>} />
+    <Route path="/my-tasks" element={<ProtectedRoute><MyTasks /></ProtectedRoute>} />
     <Route path="/reports" element={<ProtectedRoute><ReportsDashboard /></ProtectedRoute>} />
     <Route path="/reports/aging" element={<ProtectedRoute><ReconAgingReport /></ProtectedRoute>} />
     <Route path="/reports/bottleneck" element={<ProtectedRoute><StageBottleneckReport /></ProtectedRoute>} />

@@ -1064,6 +1064,151 @@ export type Database = {
           },
         ]
       }
+      vehicle_task_comments: {
+        Row: {
+          comment_text: string
+          created_at: string
+          dealership_id: string
+          id: string
+          task_id: string
+          user_id: string | null
+        }
+        Insert: {
+          comment_text: string
+          created_at?: string
+          dealership_id: string
+          id?: string
+          task_id: string
+          user_id?: string | null
+        }
+        Update: {
+          comment_text?: string
+          created_at?: string
+          dealership_id?: string
+          id?: string
+          task_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_task_comments_dealership_id_fkey"
+            columns: ["dealership_id"]
+            isOneToOne: false
+            referencedRelation: "dealerships"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_task_comments_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "vehicle_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vehicle_tasks: {
+        Row: {
+          assignee_user_id: string | null
+          blocked_at: string | null
+          blocked_by_user_id: string | null
+          blocker_note: string | null
+          blocker_reason: string | null
+          canceled_at: string | null
+          canceled_by_user_id: string | null
+          completed_at: string | null
+          completed_by_user_id: string | null
+          created_at: string
+          created_by_user_id: string | null
+          dealership_id: string
+          description: string | null
+          due_at: string | null
+          id: string
+          is_blocked: boolean
+          is_deleted: boolean
+          linked_stage_id: string | null
+          priority: Database["public"]["Enums"]["task_priority"]
+          status: Database["public"]["Enums"]["task_status"]
+          task_type: string
+          title: string
+          updated_at: string
+          vehicle_id: string
+        }
+        Insert: {
+          assignee_user_id?: string | null
+          blocked_at?: string | null
+          blocked_by_user_id?: string | null
+          blocker_note?: string | null
+          blocker_reason?: string | null
+          canceled_at?: string | null
+          canceled_by_user_id?: string | null
+          completed_at?: string | null
+          completed_by_user_id?: string | null
+          created_at?: string
+          created_by_user_id?: string | null
+          dealership_id: string
+          description?: string | null
+          due_at?: string | null
+          id?: string
+          is_blocked?: boolean
+          is_deleted?: boolean
+          linked_stage_id?: string | null
+          priority?: Database["public"]["Enums"]["task_priority"]
+          status?: Database["public"]["Enums"]["task_status"]
+          task_type?: string
+          title: string
+          updated_at?: string
+          vehicle_id: string
+        }
+        Update: {
+          assignee_user_id?: string | null
+          blocked_at?: string | null
+          blocked_by_user_id?: string | null
+          blocker_note?: string | null
+          blocker_reason?: string | null
+          canceled_at?: string | null
+          canceled_by_user_id?: string | null
+          completed_at?: string | null
+          completed_by_user_id?: string | null
+          created_at?: string
+          created_by_user_id?: string | null
+          dealership_id?: string
+          description?: string | null
+          due_at?: string | null
+          id?: string
+          is_blocked?: boolean
+          is_deleted?: boolean
+          linked_stage_id?: string | null
+          priority?: Database["public"]["Enums"]["task_priority"]
+          status?: Database["public"]["Enums"]["task_status"]
+          task_type?: string
+          title?: string
+          updated_at?: string
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_tasks_dealership_id_fkey"
+            columns: ["dealership_id"]
+            isOneToOne: false
+            referencedRelation: "dealerships"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_tasks_linked_stage_id_fkey"
+            columns: ["linked_stage_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_stages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_tasks_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vehicles: {
         Row: {
           acquisition_source: string | null
@@ -1334,6 +1479,14 @@ export type Database = {
         | "recon_manager"
         | "department_user"
         | "read_only"
+      task_priority: "low" | "normal" | "high" | "critical"
+      task_status:
+        | "not_started"
+        | "in_progress"
+        | "waiting"
+        | "blocked"
+        | "completed"
+        | "canceled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1467,6 +1620,15 @@ export const Constants = {
         "recon_manager",
         "department_user",
         "read_only",
+      ],
+      task_priority: ["low", "normal", "high", "critical"],
+      task_status: [
+        "not_started",
+        "in_progress",
+        "waiting",
+        "blocked",
+        "completed",
+        "canceled",
       ],
     },
   },

@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AppLayout from "@/components/AppLayout";
 import { supabase } from "@/integrations/supabase/client";
 import NotificationHistory from "@/components/NotificationHistory";
+import VehicleTaskSection from "@/components/tasks/VehicleTaskSection";
 import { useDealership } from "@/contexts/DealershipContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -517,6 +518,15 @@ export default function VehicleDetail() {
                 </div>
               </div>
             )}
+          </div>
+
+          {/* Vehicle Tasks */}
+          <div className="mt-4">
+            <VehicleTaskSection
+              vehicleId={id!}
+              stages={stages.map((s) => ({ id: s.id, name: s.name }))}
+              teamMembers={[]}
+            />
           </div>
 
           {/* Notification History */}
