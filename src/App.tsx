@@ -70,6 +70,10 @@ const AppRoutes = () => (
     <Route path="/reports/wip" element={<ProtectedRoute><WipQueueReport /></ProtectedRoute>} />
     <Route path="/reports/flr" element={<ProtectedRoute><TimeToFLRReport /></ProtectedRoute>} />
     <Route path="/reports/exceptions" element={<ProtectedRoute><ExceptionReport /></ProtectedRoute>} />
+    <Route path="/reports/approval-lag" element={<ProtectedRoute><ApprovalLagReport /></ProtectedRoute>} />
+    <Route path="/reports/parts-hold" element={<ProtectedRoute><PartsHoldReport /></ProtectedRoute>} />
+    <Route path="/reports/flr-output" element={<ProtectedRoute><FLROutputReport /></ProtectedRoute>} />
+    <Route path="/reports/recon-cost" element={<ProtectedRoute><ReconCostReport /></ProtectedRoute>} />
     <Route path="/vehicle/:id" element={<ProtectedRoute><VehicleDetail /></ProtectedRoute>} />
     <Route path="/settings/workflow" element={<ProtectedRoute><WorkflowSettings /></ProtectedRoute>} />
     <Route path="/settings/notifications" element={<ProtectedRoute><WorkflowNotifications /></ProtectedRoute>} />
