@@ -36,6 +36,7 @@ import ApprovalLagReport from "./pages/reports/ApprovalLagReport";
 import PartsHoldReport from "./pages/reports/PartsHoldReport";
 import FLROutputReport from "./pages/reports/FLROutputReport";
 import ReconCostReport from "./pages/reports/ReconCostReport";
+import MyTasks from "./pages/MyTasks";
 
 const queryClient = new QueryClient();
 
