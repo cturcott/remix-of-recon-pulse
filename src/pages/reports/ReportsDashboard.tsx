@@ -11,6 +11,7 @@ import { Progress } from "@/components/ui/progress";
 import {
   Car, Clock, AlertTriangle, Layers, Timer, AlertCircle, ArrowRight,
   CheckCircle, UserX, PauseCircle, RotateCcw, Target, XCircle, TrendingDown,
+  Gavel, Package, TrendingUp, DollarSign,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
