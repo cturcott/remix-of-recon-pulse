@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 const tabs = [
   { label: "Overview", icon: Kanban, path: "/command-center" },
   { label: "Vehicles", icon: Car, path: "/vehicles" },
+  { label: "Tasks", icon: Flag, path: "/my-tasks" },
   { label: "Approvals", icon: FileText, path: "/approvals" },
 ];
 
