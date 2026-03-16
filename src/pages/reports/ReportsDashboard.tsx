@@ -11,6 +11,7 @@ import { Progress } from "@/components/ui/progress";
 import {
   Car, Clock, AlertTriangle, Layers, Timer, AlertCircle, ArrowRight,
   CheckCircle, UserX, PauseCircle, RotateCcw, Target, XCircle, TrendingDown,
+  Gavel, Package, TrendingUp, DollarSign,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -148,6 +149,46 @@ export default function ReportsDashboard() {
         { label: "Total", value: totalExceptions },
         { label: "Critical", value: criticalExceptions, variant: criticalExceptions > 0 ? "danger" as const : undefined },
         { label: "No Assignee", value: unassigned, variant: unassigned > 0 ? "warning" as const : undefined },
+      ],
+    },
+    {
+      title: "Approval Lag",
+      description: "Identify delays caused by vehicles waiting for approval",
+      path: "/reports/approval-lag",
+      icon: Gavel,
+      color: "text-orange-500",
+      metrics: [
+        { label: "Pending", value: pendingApprovals, variant: pendingApprovals > 0 ? "warning" as const : undefined },
+      ],
+    },
+    {
+      title: "Parts Hold / Sublet",
+      description: "Track parts and sublet delays slowing recon",
+      path: "/reports/parts-hold",
+      icon: Package,
+      color: "text-amber-600",
+      metrics: [
+        { label: "Active Holds", value: repairItems.filter((r) => (r.status === "pending" || r.status === "in_progress") && ["parts","tires","glass","wheels","sublet"].includes((r.category ?? "").toLowerCase())).length },
+      ],
+    },
+    {
+      title: "FLR Output",
+      description: "Measure production throughput to front-line ready",
+      path: "/reports/flr-output",
+      icon: TrendingUp,
+      color: "text-emerald-500",
+      metrics: [
+        { label: "Completed (30d)", value: recentCompleted.length, variant: "success" as const },
+      ],
+    },
+    {
+      title: "Recon Cost",
+      description: "Analyze recon spending by vehicle, category and vendor",
+      path: "/reports/recon-cost",
+      icon: DollarSign,
+      color: "text-sky-500",
+      metrics: [
+        { label: "Vehicles w/ Cost", value: new Set(repairItems.map((r) => r.vehicle_id)).size },
       ],
     },
   ];
