@@ -160,7 +160,7 @@ export default function VehicleSlideUpPanel({
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="max-h-[85vh] flex flex-col overflow-hidden focus:outline-none">
+      <DrawerContent className="max-h-[85vh] flex flex-col focus:outline-none">
         <DrawerHeader className="flex items-start justify-between gap-3 pb-2">
           <div className="min-w-0 flex-1">
             <DrawerTitle className="text-lg font-bold text-foreground">
