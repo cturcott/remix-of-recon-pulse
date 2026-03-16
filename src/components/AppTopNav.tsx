@@ -1,4 +1,4 @@
-import { Car, LayoutDashboard, Kanban, FileText, Settings, Users, Upload, Workflow, Bell, LogOut, Shield, ChevronDown, BarChart3, TruckIcon, Package, Clock, AlertTriangle, Layers, Timer, AlertCircle } from "lucide-react";
+import { Car, LayoutDashboard, Kanban, FileText, Settings, Users, Upload, Workflow, Bell, LogOut, Shield, ChevronDown, BarChart3, TruckIcon, Package, Clock, AlertTriangle, Layers, Timer, AlertCircle, Flag } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import DealershipSwitcher from "./DealershipSwitcher";
