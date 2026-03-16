@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 const primaryLinks = [
   { label: "Overview", icon: Kanban, path: "/command-center" },
   { label: "Vehicles", icon: Car, path: "/vehicles" },
-  { label: "My Tasks", icon: Flag, path: "/my-tasks" },
+  { label: "Tasks", icon: Flag, path: "/my-tasks" },
   { label: "Approvals", icon: FileText, path: "/approvals" },
 ];
 
