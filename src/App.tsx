@@ -32,6 +32,10 @@ import WipQueueReport from "./pages/reports/WipQueueReport";
 import TimeToFLRReport from "./pages/reports/TimeToFLRReport";
 import ExceptionReport from "./pages/reports/ExceptionReport";
 import ReportsDashboard from "./pages/reports/ReportsDashboard";
+import ApprovalLagReport from "./pages/reports/ApprovalLagReport";
+import PartsHoldReport from "./pages/reports/PartsHoldReport";
+import FLROutputReport from "./pages/reports/FLROutputReport";
+import ReconCostReport from "./pages/reports/ReconCostReport";
 
 const queryClient = new QueryClient();
 
