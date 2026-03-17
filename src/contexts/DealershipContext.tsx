@@ -22,6 +22,10 @@ export interface WorkflowStage {
 
 interface DealershipContextType {
   dealership: Dealership | null
+  // aliases for old components
+  currentDealership: Dealership | null
+  dealerships: Dealership[]
+  setCurrentDealership: (d: Dealership) => void
   stages: WorkflowStage[]
   loading: boolean
   refetchStages: () => void
@@ -49,7 +53,12 @@ export function DealershipProvider({ children }: { children: ReactNode }) {
   useEffect(() => { fetchData() }, [profile?.dealership_id])
 
   return (
-    <DealershipContext.Provider value={{ dealership, stages, loading, refetchStages: fetchData }}>
+    <DealershipContext.Provider value={{
+      dealership, currentDealership: dealership,
+      dealerships: dealership ? [dealership] : [],
+      setCurrentDealership: setDealership,
+      stages, loading, refetchStages: fetchData
+    }}>
       {children}
     </DealershipContext.Provider>
   )
