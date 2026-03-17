@@ -1,254 +1,44 @@
-import { useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import AppLayout from "@/components/AppLayout";
-import { useMyTasks, useVehicleTasks, TASK_STATUSES, TASK_PRIORITIES, type VehicleTask, type UpdateTaskInput } from "@/hooks/useVehicleTasks";
-import TaskDialog from "@/components/tasks/TaskDialog";
-import { useAuth } from "@/contexts/AuthContext";
-import { useDealership } from "@/contexts/DealershipContext";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  CheckCircle, Clock, AlertTriangle, Ban, CircleDot, Pause,
-  Calendar, Flag, MoreHorizontal, Edit, Car, Filter,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
-import { format, isPast, isToday } from "date-fns";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { Flag, ChevronDown, Check, Clock, AlertCircle } from 'lucide-react'
+import { toast } from 'sonner'
+import AppLayout from '@/components/layout/AppLayout'
+import { supabase } from '@/integrations/supabase/client'
+import { useDealership } from '@/contexts/DealershipContext'
+import { useAuth } from '@/contexts/AuthContext'
+import { cn } from '@/lib/utils'
+import { format } from 'date-fns'
 
-const statusIcons: Record<string, React.ReactNode> = {
-  not_started: <CircleDot className="h-3.5 w-3.5 text-muted-foreground" />,
-  in_progress: <Clock className="h-3.5 w-3.5 text-blue-500" />,
-  waiting: <Pause className="h-3.5 w-3.5 text-yellow-500" />,
-  blocked: <Ban className="h-3.5 w-3.5 text-destructive" />,
-  completed: <CheckCircle className="h-3.5 w-3.5 text-green-500" />,
-  canceled: <Ban className="h-3.5 w-3.5 text-muted-foreground" />,
-};
-
-const priorityColors: Record<string, string> = {
-  critical: "text-destructive border-destructive/30 bg-destructive/10",
-  high: "text-orange-600 border-orange-500/30 bg-orange-500/10",
-  normal: "text-foreground border-border",
-  low: "text-muted-foreground border-border",
-};
+type Tab = 'open'|'overdue'|'blocked'|'due_today'|'completed'
+const PRIORITIES = ['All Priority','urgent','high','medium','low']
 
 export default function MyTasks() {
-  const navigate = useNavigate();
-  const { user } = useAuth();
-  const { currentDealership } = useDealership();
-  const queryClient = useQueryClient();
-  const { data: tasks = [], isLoading } = useMyTasks();
-  const [statusFilter, setStatusFilter] = useState("active");
-  const [priorityFilter, setPriorityFilter] = useState("all");
+  const { dealership } = useDealership(); const { user } = useAuth(); const qc = useQueryClient()
+  const [activeTab, setActiveTab] = useState<Tab>('open'); const [priority, setPriority] = useState('All Priority'); const [priorityOpen, setPriorityOpen] = useState(false)
 
-  // Fetch vehicle info for task display
-  const vehicleIds = [...new Set(tasks.map((t) => t.vehicle_id))];
-  const { data: vehicles = [] } = useQuery({
-    queryKey: ["task-vehicles", vehicleIds.sort().join(",")],
-    queryFn: async () => {
-      if (!vehicleIds.length) return [];
-      const { data, error } = await supabase
-        .from("vehicles")
-        .select("id, vin, year, make, model, stock_number")
-        .in("id", vehicleIds);
-      if (error) throw error;
-      return data;
-    },
-    enabled: vehicleIds.length > 0,
-  });
+  const { data: tasks = [], isLoading } = useQuery({ queryKey: ['my-tasks', dealership?.id, user?.id], queryFn: async () => { if (!dealership||!user) return []; const { data, error } = await supabase.from('tasks').select('*, vehicle:vehicles!vehicle_id(stock_number,make,model,year)').eq('dealership_id', dealership.id).eq('assigned_to', user.id).order('created_at',{ascending:false}); if (error) throw error; return data }, enabled: !!dealership && !!user })
 
-  const vehicleMap = new Map(vehicles.map((v) => [v.id, v]));
+  const completeMutation = useMutation({ mutationFn: async (id: string) => { const { error } = await supabase.from('tasks').update({ status:'completed', completed_at: new Date().toISOString() }).eq('id', id); if (error) throw error }, onSuccess: () => { qc.invalidateQueries({ queryKey: ['my-tasks'] }); toast.success('Task completed!') } })
 
-  // Quick complete mutation
-  const completeTask = useMutation({
-    mutationFn: async (taskId: string) => {
-      const { error } = await supabase.from("vehicle_tasks").update({
-        status: "completed",
-        completed_at: new Date().toISOString(),
-        completed_by_user_id: user?.id,
-        updated_at: new Date().toISOString(),
-      }).eq("id", taskId);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["my-tasks"] });
-      queryClient.invalidateQueries({ queryKey: ["vehicle-tasks"] });
-      queryClient.invalidateQueries({ queryKey: ["vehicle-task-counts"] });
-    },
-  });
-
-  const filtered = useMemo(() => {
-    let result = tasks;
-    if (statusFilter === "active") result = result.filter((t) => !["completed", "canceled"].includes(t.status));
-    else if (statusFilter === "overdue") result = result.filter((t) => t.due_at && isPast(new Date(t.due_at)) && !["completed", "canceled"].includes(t.status));
-    else if (statusFilter === "blocked") result = result.filter((t) => t.is_blocked);
-    else if (statusFilter === "due_today") result = result.filter((t) => t.due_at && isToday(new Date(t.due_at)));
-    else if (statusFilter === "completed") result = result.filter((t) => t.status === "completed");
-
-    if (priorityFilter !== "all") result = result.filter((t) => t.priority === priorityFilter);
-
-    return result;
-  }, [tasks, statusFilter, priorityFilter]);
-
-  // KPIs
-  const activeTasks = tasks.filter((t) => !["completed", "canceled"].includes(t.status));
-  const overdueTasks = activeTasks.filter((t) => t.due_at && isPast(new Date(t.due_at)));
-  const blockedTasks = activeTasks.filter((t) => t.is_blocked);
-  const dueTodayTasks = activeTasks.filter((t) => t.due_at && isToday(new Date(t.due_at)));
-
-  if (!currentDealership) {
-    return <AppLayout><div className="text-center py-12 text-muted-foreground">Select a dealership to view tasks</div></AppLayout>;
-  }
+  const now = new Date(); const today = now.toDateString()
+  const filterTab = (t: any) => { if (activeTab==='open') return t.status==='open'||t.status==='in_progress'; if (activeTab==='blocked') return t.status==='blocked'; if (activeTab==='completed') return t.status==='completed'; if (activeTab==='overdue') return (t.status==='open')&&t.due_date&&new Date(t.due_date)<now; if (activeTab==='due_today') return t.due_date&&new Date(t.due_date).toDateString()===today; return false }
+  const counts: any = { open: tasks.filter((t:any)=>t.status==='open'||t.status==='in_progress').length, overdue: tasks.filter((t:any)=>t.status==='open'&&t.due_date&&new Date(t.due_date)<now).length, blocked: tasks.filter((t:any)=>t.status==='blocked').length, due_today: tasks.filter((t:any)=>t.due_date&&new Date(t.due_date).toDateString()===today).length, completed: tasks.filter((t:any)=>t.status==='completed').length }
+  const filtered = (tasks as any[]).filter(filterTab).filter(t => priority==='All Priority'||t.priority===priority)
+  const TABS: {id:Tab;label:string}[] = [{id:'open',label:'Open'},{id:'overdue',label:'Overdue'},{id:'blocked',label:'Blocked'},{id:'due_today',label:'Due Today'},{id:'completed',label:'Completed'}]
+  const priorityColor = (p: string) => ({urgent:'text-red-600',high:'text-orange-500',medium:'text-yellow-500',low:'text-gray-400'}[p]||'text-gray-400')
 
   return (
     <AppLayout>
-      <div className="space-y-4">
-        {/* Header */}
-        <div>
-          <h1 className="text-xl font-bold text-foreground">My Tasks</h1>
-          <p className="text-sm text-muted-foreground">Tasks assigned to you across all vehicles</p>
+      <div className="p-6">
+        <div className="mb-5"><h1 className="text-2xl font-bold text-gray-900">My Tasks</h1><p className="text-sm text-gray-500 mt-0.5">Tasks assigned to you across all vehicles</p></div>
+        <div className="flex items-center gap-2 mb-6 flex-wrap">
+          {TABS.map(tab => <button key={tab.id} onClick={()=>setActiveTab(tab.id)} className={cn('flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors', activeTab===tab.id?'bg-teal-500 text-white':'bg-white border border-gray-200 text-gray-600 hover:border-gray-300')}>{counts[tab.id]} {tab.label}</button>)}
+          <div className="relative ml-auto"><button onClick={()=>setPriorityOpen(v=>!v)} className="flex items-center gap-1.5 border border-gray-200 rounded-lg px-3 h-9 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">{priority}<ChevronDown size={12} className={cn('text-gray-400 transition-transform',priorityOpen&&'rotate-180')} /></button>{priorityOpen && <div className="absolute top-full right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg py-1 min-w-[140px] z-20">{PRIORITIES.map(p=><button key={p} onClick={()=>{setPriority(p);setPriorityOpen(false)}} className={cn('w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 capitalize',priority===p&&'text-teal-600 font-medium')}>{p}</button>)}</div>}</div>
         </div>
-
-        {/* KPI chips */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <Badge
-            variant={statusFilter === "active" ? "default" : "outline"}
-            className="cursor-pointer"
-            onClick={() => setStatusFilter("active")}
-          >
-            {activeTasks.length} Open
-          </Badge>
-          <Badge
-            variant={statusFilter === "overdue" ? "default" : "outline"}
-            className={cn("cursor-pointer", overdueTasks.length > 0 && statusFilter !== "overdue" && "border-destructive/50 text-destructive")}
-            onClick={() => setStatusFilter("overdue")}
-          >
-            {overdueTasks.length} Overdue
-          </Badge>
-          <Badge
-            variant={statusFilter === "blocked" ? "default" : "outline"}
-            className={cn("cursor-pointer", blockedTasks.length > 0 && statusFilter !== "blocked" && "border-destructive/50 text-destructive")}
-            onClick={() => setStatusFilter("blocked")}
-          >
-            {blockedTasks.length} Blocked
-          </Badge>
-          <Badge
-            variant={statusFilter === "due_today" ? "default" : "outline"}
-            className="cursor-pointer"
-            onClick={() => setStatusFilter("due_today")}
-          >
-            {dueTodayTasks.length} Due Today
-          </Badge>
-          <Badge
-            variant={statusFilter === "completed" ? "default" : "outline"}
-            className="cursor-pointer"
-            onClick={() => setStatusFilter("completed")}
-          >
-            Completed
-          </Badge>
-
-          <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-            <SelectTrigger className="h-7 w-[120px] text-xs ml-2">
-              <SelectValue placeholder="Priority" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Priority</SelectItem>
-              {TASK_PRIORITIES.map((p) => <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Task list */}
-        {isLoading ? (
-          <div className="text-center py-12 text-muted-foreground">Loading tasks...</div>
-        ) : filtered.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground">
-            {statusFilter === "active" ? "No open tasks assigned to you" : "No tasks match this filter"}
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {filtered.map((task) => {
-              const vehicle = vehicleMap.get(task.vehicle_id);
-              const isOverdue = task.due_at && isPast(new Date(task.due_at)) && !["completed", "canceled"].includes(task.status);
-              const isDone = task.status === "completed" || task.status === "canceled";
-
-              return (
-                <Card key={task.id} className="hover:border-primary/40 transition-colors">
-                  <CardContent className="p-4 flex items-start gap-3">
-                    {/* Complete checkbox */}
-                    {!isDone ? (
-                      <div className="pt-0.5">
-                        <Checkbox
-                          checked={false}
-                          onCheckedChange={() => completeTask.mutate(task.id)}
-                          className="h-4 w-4"
-                        />
-                      </div>
-                    ) : (
-                      <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 shrink-0" />
-                    )}
-
-                    {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className={cn("text-sm font-medium", isDone && "line-through text-muted-foreground")}>
-                          {task.title}
-                        </span>
-                        {statusIcons[task.status]}
-                        <Badge variant="outline" className={cn("text-[10px] px-1.5", priorityColors[task.priority])}>
-                          {task.priority}
-                        </Badge>
-                        {task.is_blocked && <Badge variant="destructive" className="text-[10px]">Blocked</Badge>}
-                      </div>
-
-                      <div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground flex-wrap">
-                        {vehicle && (
-                          <button
-                            onClick={() => navigate(`/vehicle/${task.vehicle_id}`)}
-                            className="flex items-center gap-1 hover:text-primary transition-colors"
-                          >
-                            <Car className="h-3 w-3" />
-                            {vehicle.year} {vehicle.make} {vehicle.model}
-                            <span className="font-mono">({vehicle.stock_number || vehicle.vin.slice(-6)})</span>
-                          </button>
-                        )}
-                        <span className="bg-muted px-1.5 py-0.5 rounded text-[10px]">{task.task_type}</span>
-                        {task.due_at && (
-                          <span className={cn("flex items-center gap-1", isOverdue && "text-destructive font-medium")}>
-                            <Calendar className="h-3 w-3" />
-                            {isOverdue && <AlertTriangle className="h-3 w-3" />}
-                            {format(new Date(task.due_at), "MMM d")}
-                          </span>
-                        )}
-                        {task.is_blocked && task.blocker_reason && (
-                          <span className="text-destructive">⊘ {task.blocker_reason}</span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* View vehicle */}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 text-xs shrink-0"
-                      onClick={() => navigate(`/vehicle/${task.vehicle_id}`)}
-                    >
-                      View
-                    </Button>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        )}
+        {isLoading ? <div className="space-y-3">{Array.from({length:3}).map((_,i)=><div key={i} className="bg-white border border-gray-200 rounded-lg p-4 animate-pulse"><div className="h-4 bg-gray-200 rounded w-64 mb-2" /><div className="h-3 bg-gray-100 rounded w-40" /></div>)}</div>
+        : filtered.length===0 ? <div className="text-center py-24 text-gray-400"><Flag size={40} className="mx-auto mb-3 opacity-20" /><p className="text-base font-medium text-gray-500">No {activeTab.replace('_',' ')} tasks assigned to you</p></div>
+        : <div className="space-y-2">{filtered.map((task:any) => <div key={task.id} className="bg-white border border-gray-200 rounded-lg p-4 flex items-start gap-4 hover:shadow-sm transition-shadow"><button onClick={()=>completeMutation.mutate(task.id)} className={cn('mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors',task.status==='completed'?'bg-teal-500 border-teal-500 text-white':'border-gray-300 hover:border-teal-500')}>{task.status==='completed'&&<Check size={11} />}</button><div className="flex-1 min-w-0"><div className="flex items-start justify-between gap-2"><p className={cn('font-medium text-gray-900',task.status==='completed'&&'line-through text-gray-400')}>{task.title}</p><span className={cn('text-xs font-semibold capitalize shrink-0',priorityColor(task.priority))}>{task.priority}</span></div>{task.description&&<p className="text-sm text-gray-500 mt-0.5 truncate">{task.description}</p>}<div className="flex items-center gap-3 mt-1.5">{task.vehicle&&<span className="text-xs text-gray-400">{(task.vehicle as any).year} {(task.vehicle as any).make} · {(task.vehicle as any).stock_number}</span>}{task.due_date&&<span className="flex items-center gap-1 text-xs text-gray-400"><Clock size={10} />Due {format(new Date(task.due_date),'MMM d')}</span>}{task.status==='blocked'&&<span className="flex items-center gap-1 text-xs text-red-500 font-medium"><AlertCircle size={10} />Blocked</span>}</div></div></div>)}</div>}
       </div>
     </AppLayout>
-  );
+  )
 }

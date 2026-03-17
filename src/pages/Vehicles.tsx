@@ -1,252 +1,45 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
-import AppLayout from "@/components/AppLayout";
-import AddVehicleDialog from "@/components/AddVehicleDialog";
-import { supabase } from "@/integrations/supabase/client";
-import { useDealership } from "@/contexts/DealershipContext";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Car, Search, Clock, ArrowUpDown } from "lucide-react";
-import { Button } from "@/components/ui/button";
-
-type SortField = "created_at" | "year" | "make" | "mileage" | "stock_number";
-type SortDir = "asc" | "desc";
+import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { Search, Plus, ArrowUpDown, Clock } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import AppLayout from '@/components/layout/AppLayout'
+import { supabase } from '@/integrations/supabase/client'
+import { useDealership } from '@/contexts/DealershipContext'
+import { cn, formatMileage, getDaysInRecon, formatDays, getStatusLabel } from '@/lib/utils'
 
 export default function Vehicles() {
-  const { currentDealership } = useDealership();
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [stageFilter, setStageFilter] = useState<string>("all");
-  const [sortField, setSortField] = useState<SortField>("created_at");
-  const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const { dealership, stages } = useDealership()
+  const navigate = useNavigate()
+  const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [stageFilter, setStageFilter] = useState('all')
+  const [sortField, setSortField] = useState('stock_number')
+  const [sortDir, setSortDir] = useState<'asc'|'desc'>('asc')
 
-  const { data: stages = [] } = useQuery({
-    queryKey: ["workflow-stages", currentDealership?.id],
-    queryFn: async () => {
-      if (!currentDealership) return [];
-      const { data, error } = await supabase
-        .from("workflow_stages")
-        .select("*")
-        .eq("dealership_id", currentDealership.id)
-        .eq("is_active", true)
-        .order("sort_order");
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!currentDealership,
-  });
+  const { data: vehicles = [], isLoading } = useQuery({ queryKey: ['all-vehicles', dealership?.id], queryFn: async () => { if (!dealership) return []; const { data, error } = await supabase.from('vehicles').select('*, stage:workflow_stages!current_stage_id(name)').eq('dealership_id', dealership.id).order('created_at', { ascending: false }); if (error) throw error; return data }, enabled: !!dealership })
 
-  const { data: vehicles = [], isLoading } = useQuery({
-    queryKey: ["vehicles-list", currentDealership?.id],
-    queryFn: async () => {
-      if (!currentDealership) return [];
-      const { data, error } = await supabase
-        .from("vehicles")
-        .select("*")
-        .eq("dealership_id", currentDealership.id)
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!currentDealership,
-  });
-
-  const getDays = (createdAt: string) =>
-    Math.floor((Date.now() - new Date(createdAt).getTime()) / (1000 * 60 * 60 * 24));
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "in_recon": return "default";
-      case "frontline_ready": return "secondary";
-      case "wholesale": return "outline";
-      case "sold": return "secondary";
-      default: return "outline";
-    }
-  };
-
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case "in_recon": return "In Recon";
-      case "frontline_ready": return "Frontline Ready";
-      case "wholesale": return "Wholesale";
-      case "sold": return "Sold";
-      default: return status;
-    }
-  };
-
-  // Filter
-  let filtered = vehicles.filter((v) => {
-    if (statusFilter !== "all" && v.status !== statusFilter) return false;
-    if (stageFilter !== "all" && v.current_stage_id !== stageFilter) return false;
-    if (search) {
-      const q = search.toLowerCase();
-      const match =
-        v.vin?.toLowerCase().includes(q) ||
-        v.make?.toLowerCase().includes(q) ||
-        v.model?.toLowerCase().includes(q) ||
-        v.stock_number?.toLowerCase().includes(q) ||
-        String(v.year).includes(q);
-      if (!match) return false;
-    }
-    return true;
-  });
-
-  // Sort
-  filtered = [...filtered].sort((a, b) => {
-    let aVal: any = a[sortField];
-    let bVal: any = b[sortField];
-    if (aVal == null) aVal = "";
-    if (bVal == null) bVal = "";
-    if (typeof aVal === "string") aVal = aVal.toLowerCase();
-    if (typeof bVal === "string") bVal = bVal.toLowerCase();
-    if (aVal < bVal) return sortDir === "asc" ? -1 : 1;
-    if (aVal > bVal) return sortDir === "asc" ? 1 : -1;
-    return 0;
-  });
-
-  const toggleSort = (field: SortField) => {
-    if (sortField === field) {
-      setSortDir(sortDir === "asc" ? "desc" : "asc");
-    } else {
-      setSortField(field);
-      setSortDir("asc");
-    }
-  };
-
-  const SortHeader = ({ field, children }: { field: SortField; children: React.ReactNode }) => (
-    <button
-      onClick={() => toggleSort(field)}
-      className="flex items-center gap-1 font-medium text-muted-foreground hover:text-foreground transition-colors"
-    >
-      {children}
-      <ArrowUpDown className={`h-3 w-3 ${sortField === field ? "text-primary" : ""}`} />
-    </button>
-  );
+  const filtered = (vehicles as any[]).filter(v => { if (search && ![v.stock_number,v.vin,v.make,v.model,v.year?.toString()].join(' ').toLowerCase().includes(search.toLowerCase())) return false; if (statusFilter !== 'all' && v.status !== statusFilter) return false; if (stageFilter !== 'all' && v.current_stage_id !== stageFilter) return false; return true }).sort((a: any, b: any) => { let cmp = 0; if (sortField === 'stock_number') cmp = a.stock_number.localeCompare(b.stock_number); else if (sortField === 'mileage') cmp = (a.mileage||0)-(b.mileage||0); else if (sortField === 'days') cmp = getDaysInRecon(a.entered_recon_at)-getDaysInRecon(b.entered_recon_at); return sortDir === 'asc' ? cmp : -cmp })
 
   return (
     <AppLayout>
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Vehicles</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {filtered.length} vehicle{filtered.length !== 1 ? "s" : ""} in inventory
-          </p>
+      <div className="p-6">
+        <div className="flex items-start justify-between mb-5"><div><h1 className="text-2xl font-bold text-gray-900">Vehicles</h1><p className="text-sm text-gray-500 mt-0.5">{filtered.length} vehicles in inventory</p></div><button onClick={() => navigate('/command-center')} className="flex items-center gap-1.5 bg-teal-500 hover:bg-teal-600 text-white text-sm font-semibold px-4 py-2 rounded-lg"><Plus size={15} />Add Vehicle</button></div>
+        <div className="flex items-center gap-3 mb-5 flex-wrap">
+          <div className="relative flex-1 min-w-[200px] max-w-sm"><Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" /><input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search VIN, make, model, stock #..." className="w-full border border-gray-200 rounded-lg pl-8 pr-3 h-9 text-sm bg-white focus:outline-none focus:border-teal-500" /></div>
+          <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="border border-gray-200 rounded-lg px-3 h-9 text-sm bg-white"><option value="all">All Statuses</option><option value="in_recon">In Recon</option><option value="front_line_ready">Front Line Ready</option><option value="sold">Sold</option></select>
+          <select value={stageFilter} onChange={e => setStageFilter(e.target.value)} className="border border-gray-200 rounded-lg px-3 h-9 text-sm bg-white"><option value="all">All Stages</option>{stages.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select>
         </div>
-        <AddVehicleDialog />
+        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+          <table className="w-full border-collapse text-sm">
+            <thead><tr className="bg-gray-50 border-b border-gray-200"><th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Stock #</th><th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Vehicle</th><th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">VIN</th><th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Mileage</th><th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Stage</th><th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Status</th><th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Days</th></tr></thead>
+            <tbody>
+              {isLoading ? Array.from({length:5}).map((_,i) => <tr key={i}>{Array.from({length:7}).map((_,j) => <td key={j} className="px-4 py-3"><div className="h-4 bg-gray-100 rounded animate-pulse" /></td>)}</tr>)
+              : filtered.length === 0 ? <tr><td colSpan={7} className="py-16 text-center text-gray-400 text-sm">No vehicles found</td></tr>
+              : filtered.map((v: any) => <tr key={v.id} onClick={() => navigate('/vehicle/' + v.id)} className="border-b border-gray-100 hover:bg-gray-50 cursor-pointer last:border-0"><td className="px-4 py-3 font-mono font-semibold text-gray-800">{v.stock_number}</td><td className="px-4 py-3"><span className="font-medium text-gray-900">{v.year} {v.make} {v.model}</span>{v.trim && <span className="text-gray-400 ml-1">{v.trim}</span>}</td><td className="px-4 py-3 font-mono text-xs text-gray-500">{v.vin || '—'}</td><td className="px-4 py-3 text-gray-700">{formatMileage(v.mileage)}</td><td className="px-4 py-3 text-gray-700">{v.stage?.name || '—'}</td><td className="px-4 py-3"><span className="bg-teal-500 text-white text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap">{getStatusLabel(v.status)}</span></td><td className="px-4 py-3"><span className="flex items-center gap-1 text-gray-600"><Clock size={11} className="text-gray-400" />{formatDays(getDaysInRecon(v.entered_recon_at))}</span></td></tr>)}
+            </tbody>
+          </table>
+        </div>
       </div>
-
-      {/* Filters */}
-      <div className="flex flex-wrap gap-3 mb-6">
-        <div className="relative flex-1 min-w-[200px] max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search VIN, make, model, stock #..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
-          />
-        </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[160px]">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
-            <SelectItem value="in_recon">In Recon</SelectItem>
-            <SelectItem value="frontline_ready">Frontline Ready</SelectItem>
-            <SelectItem value="wholesale">Wholesale</SelectItem>
-            <SelectItem value="sold">Sold</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={stageFilter} onValueChange={setStageFilter}>
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Stage" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Stages</SelectItem>
-            {stages.map((s: any) => (
-              <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Table */}
-      {isLoading ? (
-        <div className="flex items-center justify-center py-16 text-muted-foreground">Loading vehicles...</div>
-      ) : filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-muted/30 p-16">
-          <Car className="h-10 w-10 text-muted-foreground mb-3" />
-          <p className="text-sm text-muted-foreground mb-1">No vehicles found</p>
-          <p className="text-xs text-muted-foreground">Add a vehicle to get started</p>
-        </div>
-      ) : (
-        <div className="rounded-xl border border-border bg-card overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border bg-muted/50 text-left">
-                  <th className="px-4 py-3"><SortHeader field="stock_number">Stock #</SortHeader></th>
-                  <th className="px-4 py-3"><SortHeader field="year">Vehicle</SortHeader></th>
-                  <th className="px-4 py-3 font-medium text-muted-foreground">VIN</th>
-                  <th className="px-4 py-3"><SortHeader field="mileage">Mileage</SortHeader></th>
-                  <th className="px-4 py-3 font-medium text-muted-foreground">Color</th>
-                  <th className="px-4 py-3 font-medium text-muted-foreground">Stage</th>
-                  <th className="px-4 py-3 font-medium text-muted-foreground">Status</th>
-                  <th className="px-4 py-3"><SortHeader field="created_at">Days</SortHeader></th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((v) => {
-                  const stage = stages.find((s: any) => s.id === v.current_stage_id);
-                  const days = getDays(v.created_at);
-                  return (
-                    <tr
-                      key={v.id}
-                      className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors"
-                    >
-                      <td className="px-4 py-3 font-mono text-foreground">
-                        <Link to={`/vehicle/${v.id}`} className="hover:text-primary transition-colors">
-                          {v.stock_number || "—"}
-                        </Link>
-                      </td>
-                      <td className="px-4 py-3">
-                        <Link to={`/vehicle/${v.id}`} className="hover:text-primary transition-colors">
-                          <span className="font-medium text-foreground">
-                            {v.year} {v.make} {v.model}
-                          </span>
-                          {v.trim && <span className="text-muted-foreground ml-1">{v.trim}</span>}
-                        </Link>
-                      </td>
-                      <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{v.vin}</td>
-                      <td className="px-4 py-3 text-muted-foreground">{v.mileage?.toLocaleString()}</td>
-                      <td className="px-4 py-3 text-muted-foreground">{v.exterior_color || "—"}</td>
-                      <td className="px-4 py-3">
-                        <Badge variant="outline" className="text-xs font-normal">
-                          {stage?.name ?? "—"}
-                        </Badge>
-                      </td>
-                      <td className="px-4 py-3">
-                        <Badge variant={getStatusColor(v.status) as any} className="text-xs">
-                          {getStatusLabel(v.status)}
-                        </Badge>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className={`flex items-center gap-1 text-xs ${days > 10 ? "text-destructive font-semibold" : "text-muted-foreground"}`}>
-                          <Clock className="h-3 w-3" />
-                          {days}d
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
     </AppLayout>
-  );
+  )
 }

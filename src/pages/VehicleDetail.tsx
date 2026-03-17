@@ -1,571 +1,68 @@
-import { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import AppLayout from "@/components/AppLayout";
-import { supabase } from "@/integrations/supabase/client";
-import NotificationHistory from "@/components/NotificationHistory";
-import VehicleTaskSection from "@/components/tasks/VehicleTaskSection";
-import { useDealership } from "@/contexts/DealershipContext";
-import { useAuth } from "@/contexts/AuthContext";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { toast } from "sonner";
-import {
-  ArrowLeft, Car, Clock, Wrench, Plus, Check, X, DollarSign,
-  ChevronRight, Loader2, Trash2, CheckCircle2, XCircle, AlertCircle, Bell, Mail
-} from "lucide-react";
+import { useState } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { ArrowLeft, Clock, User, ChevronRight, Flag, ClipboardCheck, History, Car } from 'lucide-react'
+import { toast } from 'sonner'
+import AppLayout from '@/components/layout/AppLayout'
+import { supabase } from '@/integrations/supabase/client'
+import { useDealership } from '@/contexts/DealershipContext'
+import { cn, formatDaysHours, formatMileage, getStatusLabel, getDaysInRecon, formatDays } from '@/lib/utils'
 
-const CATEGORIES = ["Mechanical", "Electrical", "Cosmetic", "Body/Paint", "Glass", "Interior", "Tires/Wheels", "Sublet", "Detail", "Other"];
+type Tab = 'overview' | 'tasks' | 'approvals' | 'history'
 
 export default function VehicleDetail() {
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const { currentDealership } = useDealership();
-  const { user, roles, isPlatformAdmin } = useAuth();
-  const queryClient = useQueryClient();
+  const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate()
+  const { stages } = useDealership()
+  const qc = useQueryClient()
+  const [tab, setTab] = useState<Tab>('overview')
 
-  const canApprove = isPlatformAdmin || roles.includes("dealership_admin") || roles.includes("recon_manager");
+  const { data: vehicle, isLoading } = useQuery({ queryKey: ['vehicle', id], queryFn: async () => { const { data, error } = await supabase.from('vehicles').select('*, stage:workflow_stages!current_stage_id(*), assignee:profiles!assigned_to(full_name, avatar_initials)').eq('id', id!).single(); if (error) throw error; return data }, enabled: !!id })
+  const { data: approvals = [] } = useQuery({ queryKey: ['vehicle-approvals', id], queryFn: async () => { const { data } = await supabase.from('service_approvals').select('*').eq('vehicle_id', id!).order('created_at', { ascending: false }); return data || [] }, enabled: !!id && tab === 'approvals' })
+  const { data: history = [] } = useQuery({ queryKey: ['vehicle-history', id], queryFn: async () => { const { data } = await supabase.from('vehicle_stage_history').select('*, stage:workflow_stages!stage_id(name)').eq('vehicle_id', id!).order('entered_at', { ascending: false }); return data || [] }, enabled: !!id && tab === 'history' })
 
-  // Vehicle data
-  const { data: vehicle, isLoading: loadingVehicle } = useQuery({
-    queryKey: ["vehicle", id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("vehicles")
-        .select("*")
-        .eq("id", id!)
-        .single();
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!id,
-  });
+  const advanceMutation = useMutation({ mutationFn: async (nextStageId: string) => { const now = new Date().toISOString(); await supabase.from('vehicle_stage_history').insert({ vehicle_id: id, stage_id: (vehicle as any)?.current_stage_id, exited_at: now }); const { error } = await supabase.from('vehicles').update({ current_stage_id: nextStageId, stage_entered_at: now }).eq('id', id!); if (error) throw error }, onSuccess: () => { qc.invalidateQueries({ queryKey: ['vehicle', id] }); toast.success('Stage advanced') }, onError: () => toast.error('Failed') })
 
-  // Workflow stages
-  const { data: stages = [] } = useQuery({
-    queryKey: ["workflow-stages", vehicle?.dealership_id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("workflow_stages")
-        .select("*")
-        .eq("dealership_id", vehicle!.dealership_id)
-        .eq("is_active", true)
-        .order("sort_order");
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!vehicle?.dealership_id,
-  });
+  if (isLoading) return <AppLayout><div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" /></div></AppLayout>
+  if (!vehicle) return <AppLayout><div className="p-6 text-gray-500">Vehicle not found.</div></AppLayout>
 
-  // Stage history
-  const { data: stageHistory = [] } = useQuery({
-    queryKey: ["stage-history", id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("vehicle_stage_history")
-        .select("*")
-        .eq("vehicle_id", id!)
-        .order("changed_at", { ascending: true });
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!id,
-  });
-
-  // Repair items
-  const { data: repairItems = [], isLoading: loadingItems } = useQuery({
-    queryKey: ["repair-items", id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("repair_items")
-        .select("*")
-        .eq("vehicle_id", id!)
-        .order("created_at", { ascending: true });
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!id,
-  });
-
-  // Add item form
-  const [addOpen, setAddOpen] = useState(false);
-  const [itemDesc, setItemDesc] = useState("");
-  const [itemCategory, setItemCategory] = useState("Mechanical");
-  const [itemCost, setItemCost] = useState("");
-  const [itemVendor, setItemVendor] = useState("");
-  const [denialId, setDenialId] = useState<string | null>(null);
-  const [denialReason, setDenialReason] = useState("");
-
-  const addItem = useMutation({
-    mutationFn: async () => {
-      if (!vehicle || !currentDealership) throw new Error("Missing context");
-      const { error } = await supabase.from("repair_items").insert({
-        vehicle_id: vehicle.id,
-        dealership_id: vehicle.dealership_id,
-        stage_id: vehicle.current_stage_id,
-        description: itemDesc,
-        category: itemCategory,
-        estimated_cost: itemCost ? parseFloat(itemCost) : null,
-        vendor_name: itemVendor || null,
-        status: "pending",
-        created_by: user?.id,
-      });
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["repair-items", id] });
-      toast.success("Work item added");
-      setItemDesc(""); setItemCost(""); setItemVendor(""); setAddOpen(false);
-    },
-    onError: (err: any) => toast.error(err.message),
-  });
-
-  const approveItem = useMutation({
-    mutationFn: async (itemId: string) => {
-      const { error } = await supabase.from("repair_items").update({
-        status: "approved",
-        approved_by: user?.id,
-        approved_at: new Date().toISOString(),
-      }).eq("id", itemId);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["repair-items", id] });
-      toast.success("Item approved");
-    },
-    onError: (err: any) => toast.error(err.message),
-  });
-
-  const denyItem = useMutation({
-    mutationFn: async ({ itemId, reason }: { itemId: string; reason: string }) => {
-      const { error } = await supabase.from("repair_items").update({
-        status: "denied",
-        denied_by: user?.id,
-        denied_at: new Date().toISOString(),
-        denial_reason: reason || null,
-      }).eq("id", itemId);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["repair-items", id] });
-      setDenialId(null); setDenialReason("");
-      toast.success("Item denied");
-    },
-    onError: (err: any) => toast.error(err.message),
-  });
-
-  const deleteItem = useMutation({
-    mutationFn: async (itemId: string) => {
-      const { error } = await supabase.from("repair_items").delete().eq("id", itemId);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["repair-items", id] });
-      toast.success("Item removed");
-    },
-    onError: (err: any) => toast.error(err.message),
-  });
-
-  const approveAll = useMutation({
-    mutationFn: async () => {
-      const pending = repairItems.filter((i) => i.status === "pending");
-      for (const item of pending) {
-        await supabase.from("repair_items").update({
-          status: "approved",
-          approved_by: user?.id,
-          approved_at: new Date().toISOString(),
-        }).eq("id", item.id);
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["repair-items", id] });
-      toast.success("All pending items approved");
-    },
-    onError: (err: any) => toast.error(err.message),
-  });
-
-  const denyAll = useMutation({
-    mutationFn: async () => {
-      const pending = repairItems.filter((i) => i.status === "pending");
-      for (const item of pending) {
-        await supabase.from("repair_items").update({
-          status: "denied",
-          denied_by: user?.id,
-          denied_at: new Date().toISOString(),
-        }).eq("id", item.id);
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["repair-items", id] });
-      toast.success("All pending items denied");
-    },
-    onError: (err: any) => toast.error(err.message),
-  });
-
-  if (loadingVehicle) {
-    return (
-      <AppLayout>
-        <div className="flex items-center justify-center h-96 text-muted-foreground">Loading vehicle...</div>
-      </AppLayout>
-    );
-  }
-
-  if (!vehicle) {
-    return (
-      <AppLayout>
-        <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6">
-          <ArrowLeft className="h-4 w-4" /> Back
-        </button>
-        <div className="flex items-center justify-center h-96">
-          <p className="text-muted-foreground">Vehicle not found</p>
-        </div>
-      </AppLayout>
-    );
-  }
-
-  const currentStage = stages.find((s) => s.id === vehicle.current_stage_id);
-  const daysInRecon = Math.floor((Date.now() - new Date(vehicle.created_at).getTime()) / (1000 * 60 * 60 * 24));
-  const pendingItems = repairItems.filter((i) => i.status === "pending");
-  const approvedItems = repairItems.filter((i) => i.status === "approved");
-  const deniedItems = repairItems.filter((i) => i.status === "denied");
-  const totalEstimated = repairItems.reduce((sum, i) => sum + (Number(i.estimated_cost) || 0), 0);
-  const totalApproved = approvedItems.reduce((sum, i) => sum + (Number(i.estimated_cost) || 0), 0);
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "approved": return <CheckCircle2 className="h-4 w-4 text-emerald-600" />;
-      case "denied": return <XCircle className="h-4 w-4 text-destructive" />;
-      default: return <AlertCircle className="h-4 w-4 text-amber-500" />;
-    }
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "approved": return <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 text-xs">Approved</Badge>;
-      case "denied": return <Badge variant="destructive" className="text-xs">Denied</Badge>;
-      default: return <Badge variant="outline" className="text-xs border-amber-300 text-amber-700 bg-amber-50">Pending</Badge>;
-    }
-  };
+  const v = vehicle as any
+  const stageIdx = stages.findIndex(s => s.id === v.current_stage_id)
+  const nextStage = stageIdx >= 0 && stageIdx < stages.length - 1 ? stages[stageIdx + 1] : null
 
   return (
     <AppLayout>
-      {/* Header */}
-      <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4">
-        <ArrowLeft className="h-4 w-4" /> Back
-      </button>
-
-      <div className="flex flex-col lg:flex-row gap-6">
-        {/* Left Column — Vehicle Info */}
-        <div className="lg:w-80 shrink-0 space-y-4">
-          <div className="rounded-xl border border-border bg-card p-5">
-            <div className="flex items-center gap-2 mb-3">
-              <Car className="h-5 w-5 text-primary" />
-              <h1 className="text-xl font-bold text-foreground">
-                {vehicle.year} {vehicle.make} {vehicle.model}
-              </h1>
+      <div className="max-w-4xl mx-auto p-6">
+        <button onClick={() => navigate(-1)} className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900 mb-5 transition-colors"><ArrowLeft size={16} />Back</button>
+        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+          <div className="p-6 border-b border-gray-100">
+            <div className="flex items-start justify-between">
+              <div>
+                <div className="flex items-center gap-2 mb-1"><span className="font-mono text-sm font-semibold text-gray-500">{v.stock_number}</span><span className="bg-teal-500 text-white text-xs font-semibold px-2.5 py-0.5 rounded-full">{getStatusLabel(v.status)}</span></div>
+                <h1 className="text-2xl font-bold text-gray-900">{v.year} {v.make} {v.model}</h1>
+                {v.trim && <p className="text-gray-500">{v.trim}</p>}
+              </div>
+              {nextStage && <button onClick={() => advanceMutation.mutate(nextStage.id)} className="flex items-center gap-1.5 bg-teal-500 hover:bg-teal-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors">Advance to {nextStage.name}<ChevronRight size={15} /></button>}
             </div>
-            {vehicle.trim && <p className="text-sm text-muted-foreground mb-3">{vehicle.trim}</p>}
-
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between"><span className="text-muted-foreground">VIN</span><span className="font-mono text-foreground">{vehicle.vin}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Stock #</span><span className="text-foreground">{vehicle.stock_number || "—"}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Mileage</span><span className="text-foreground">{vehicle.mileage?.toLocaleString()} mi</span></div>
-              {vehicle.exterior_color && <div className="flex justify-between"><span className="text-muted-foreground">Ext. Color</span><span className="text-foreground">{vehicle.exterior_color}</span></div>}
-              {vehicle.interior_color && <div className="flex justify-between"><span className="text-muted-foreground">Int. Color</span><span className="text-foreground">{vehicle.interior_color}</span></div>}
-              {vehicle.acv && <div className="flex justify-between"><span className="text-muted-foreground">ACV</span><span className="text-foreground">${Number(vehicle.acv).toLocaleString()}</span></div>}
-              {vehicle.acquisition_source && <div className="flex justify-between"><span className="text-muted-foreground">Source</span><span className="text-foreground">{vehicle.acquisition_source}</span></div>}
+            <div className="grid grid-cols-3 gap-4 mt-5">
+              <div className="bg-gray-50 rounded-lg p-3"><p className="text-xs text-gray-500 mb-1">Time in Recon</p><div className="flex items-center gap-1.5"><Clock size={14} className="text-teal-500" /><span className="font-semibold text-gray-900">{formatDays(getDaysInRecon(v.entered_recon_at))}</span></div></div>
+              <div className="bg-gray-50 rounded-lg p-3"><p className="text-xs text-gray-500 mb-1">Current Stage</p><p className="font-semibold text-gray-900 text-sm">{v.stage?.name || '—'}</p></div>
+              <div className="bg-gray-50 rounded-lg p-3"><p className="text-xs text-gray-500 mb-1">Assigned To</p><div className="flex items-center gap-1.5"><User size={13} className="text-gray-400" /><span className="font-semibold text-gray-900 text-sm">{v.assignee?.full_name || 'Unassigned'}</span></div></div>
             </div>
           </div>
-
-          {/* Recon Status */}
-          <div className="rounded-xl border border-border bg-card p-5">
-            <h3 className="font-semibold text-foreground mb-3">Recon Status</h3>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Current Stage</span>
-                <Badge variant="secondary" className="text-xs">{currentStage?.name ?? "—"}</Badge>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Days in Recon</span>
-                <span className={`font-semibold ${daysInRecon > 10 ? "text-destructive" : "text-foreground"}`}>{daysInRecon}d</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Status</span>
-                <Badge variant="outline" className="text-xs">{vehicle.status === "in_recon" ? "In Recon" : vehicle.status}</Badge>
-              </div>
-            </div>
-
-            {/* Stage Progress */}
-            <div className="mt-4 space-y-1">
-              {stages.map((stage, idx) => {
-                const historyEntry = stageHistory.find((h) => h.to_stage_id === stage.id);
-                const isCurrent = stage.id === vehicle.current_stage_id;
-                const isPast = historyEntry && !isCurrent && stages.findIndex((s) => s.id === vehicle.current_stage_id) > idx;
-                return (
-                  <div key={stage.id} className={`flex items-center gap-2 px-2 py-1.5 rounded text-xs ${
-                    isCurrent ? "bg-primary/10 text-primary font-semibold" : isPast ? "text-muted-foreground" : "text-muted-foreground/50"
-                  }`}>
-                    <div className={`h-2 w-2 rounded-full shrink-0 ${
-                      isCurrent ? "bg-primary" : isPast ? "bg-muted-foreground" : "bg-border"
-                    }`} />
-                    <span className="flex-1">{stage.name}</span>
-                    {historyEntry && (
-                      <span className="text-[10px]">
-                        {new Date(historyEntry.changed_at).toLocaleDateString()}
-                      </span>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+          <div className="flex border-b border-gray-100 px-6">
+            {(['overview','tasks','approvals','history'] as Tab[]).map(t => (
+              <button key={t} onClick={() => setTab(t)} className={cn('flex items-center gap-1.5 px-3 py-3 text-sm font-medium border-b-2 mr-1 capitalize transition-colors', tab === t ? 'border-teal-500 text-teal-600' : 'border-transparent text-gray-500 hover:text-gray-700')}>{t}</button>
+            ))}
           </div>
-
-          {/* Cost Summary */}
-          <div className="rounded-xl border border-border bg-card p-5">
-            <h3 className="font-semibold text-foreground mb-3">Cost Summary</h3>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Total Estimated</span>
-                <span className="font-medium text-foreground">${totalEstimated.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Total Approved</span>
-                <span className="font-medium text-emerald-600">${totalApproved.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Items</span>
-                <span className="text-foreground">{repairItems.length} ({pendingItems.length} pending)</span>
-              </div>
-            </div>
+          <div className="p-6">
+            {tab === 'overview' && <div className="grid grid-cols-2 gap-x-8 gap-y-4">{[['VIN',v.vin||'—',true],['Mileage',formatMileage(v.mileage),false],['Color',v.color||'—',false],['Year',v.year||'—',false]].map(([l,val,mono]:[any,any,any]) => <div key={l}><p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-0.5">{l}</p><p className={cn('text-sm text-gray-900',mono&&'font-mono')}>{val}</p></div>)}{v.notes && <div className="col-span-2"><p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Notes</p><p className="text-sm text-gray-700 bg-gray-50 rounded-lg p-3">{v.notes}</p></div>}</div>}
+            {tab === 'tasks' && <div className="text-center py-10 text-gray-400"><Flag size={32} className="mx-auto mb-2 opacity-20" /><p className="text-sm">No tasks for this vehicle</p></div>}
+            {tab === 'approvals' && (approvals.length === 0 ? <div className="text-center py-10 text-gray-400"><ClipboardCheck size={32} className="mx-auto mb-2 opacity-20" /><p className="text-sm">No approvals for this vehicle</p></div> : <div className="space-y-2">{(approvals as any[]).map(a => <div key={a.id} className="flex items-center justify-between p-3 border border-gray-100 rounded-lg"><div><p className="font-medium text-sm text-gray-900">{a.description}</p><p className="text-xs text-gray-400">{a.category}</p></div><span className={cn('text-xs font-semibold px-2 py-1 rounded-full',a.status==='pending'?'bg-amber-50 text-amber-700':a.status==='approved'?'bg-green-50 text-green-700':'bg-red-50 text-red-700')}>{a.status}</span></div>)}</div>)}
+            {tab === 'history' && (history.length === 0 ? <div className="text-center py-10 text-gray-400"><History size={32} className="mx-auto mb-2 opacity-20" /><p className="text-sm">No stage history yet</p></div> : <div className="space-y-3">{(history as any[]).map((h,i) => <div key={h.id} className="flex items-start gap-3"><div className={cn('w-2 h-2 rounded-full mt-1.5 shrink-0',i===0?'bg-teal-500':'bg-gray-300')} /><div><p className="text-sm font-medium text-gray-900">{h.stage?.name}</p><p className="text-xs text-gray-400">{formatDaysHours(h.entered_at)} ago</p></div></div>)}</div>)}
           </div>
-        </div>
-
-        {/* Right Column — Work Items */}
-        <div className="flex-1 min-w-0">
-          <div className="rounded-xl border border-border bg-card">
-            {/* Work Items Header */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-border">
-              <div className="flex items-center gap-2">
-                <Wrench className="h-5 w-5 text-primary" />
-                <h2 className="text-lg font-semibold text-foreground">Service Work Items</h2>
-                {pendingItems.length > 0 && (
-                  <Badge variant="outline" className="text-xs border-amber-300 text-amber-700 bg-amber-50">
-                    {pendingItems.length} pending approval
-                  </Badge>
-                )}
-              </div>
-              <div className="flex gap-2">
-                {canApprove && pendingItems.length > 0 && (
-                  <>
-                    <Button variant="outline" size="sm" onClick={() => denyAll.mutate()} disabled={denyAll.isPending} className="text-destructive border-destructive/30 hover:bg-destructive/10">
-                      <X className="h-3.5 w-3.5 mr-1" /> Deny All
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => approveAll.mutate()} disabled={approveAll.isPending} className="text-emerald-600 border-emerald-300 hover:bg-emerald-50">
-                      <Check className="h-3.5 w-3.5 mr-1" /> Approve All
-                    </Button>
-                  </>
-                )}
-                <Dialog open={addOpen} onOpenChange={setAddOpen}>
-                  <DialogTrigger asChild>
-                    <Button size="sm" className="gap-1">
-                      <Plus className="h-3.5 w-3.5" /> Add Item
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Add Work Item</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                      <div className="space-y-1.5">
-                        <Label>Description *</Label>
-                        <Textarea value={itemDesc} onChange={(e) => setItemDesc(e.target.value)} placeholder="Describe the repair or service needed..." rows={3} />
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-1.5">
-                          <Label>Category</Label>
-                          <Select value={itemCategory} onValueChange={setItemCategory}>
-                            <SelectTrigger><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              {CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="space-y-1.5">
-                          <Label>Estimated Cost</Label>
-                          <Input type="number" value={itemCost} onChange={(e) => setItemCost(e.target.value)} placeholder="0.00" />
-                        </div>
-                      </div>
-                      <div className="space-y-1.5">
-                        <Label>Vendor (optional)</Label>
-                        <Input value={itemVendor} onChange={(e) => setItemVendor(e.target.value)} placeholder="Vendor or sublet name" />
-                      </div>
-                      <div className="flex justify-end gap-2">
-                        <Button variant="outline" onClick={() => setAddOpen(false)}>Cancel</Button>
-                        <Button onClick={() => addItem.mutate()} disabled={!itemDesc || addItem.isPending}>
-                          {addItem.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
-                          Add Item
-                        </Button>
-                      </div>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              </div>
-            </div>
-
-            {/* Work Items List */}
-            {loadingItems ? (
-              <div className="flex items-center justify-center py-12 text-muted-foreground">Loading work items...</div>
-            ) : repairItems.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16">
-                <Wrench className="h-8 w-8 text-muted-foreground mb-2" />
-                <p className="text-sm text-muted-foreground mb-1">No work items yet</p>
-                <p className="text-xs text-muted-foreground">Service department can add itemized repair work here</p>
-              </div>
-            ) : (
-              <div className="divide-y divide-border">
-                {repairItems.map((item) => (
-                  <div key={item.id} className={`px-5 py-4 ${item.status === "denied" ? "opacity-60" : ""}`}>
-                    <div className="flex items-start gap-3">
-                      <div className="mt-0.5">{getStatusIcon(item.status)}</div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-2">
-                          <div>
-                            <p className={`text-sm font-medium text-foreground ${item.status === "denied" ? "line-through" : ""}`}>
-                              {item.description}
-                            </p>
-                            <div className="flex items-center gap-2 mt-1 flex-wrap">
-                              <Badge variant="outline" className="text-[10px] font-normal">{item.category}</Badge>
-                              {item.vendor_name && (
-                                <span className="text-xs text-muted-foreground">Vendor: {item.vendor_name}</span>
-                              )}
-                              {item.denial_reason && (
-                                <span className="text-xs text-destructive">Reason: {item.denial_reason}</span>
-                              )}
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2 shrink-0">
-                            {item.estimated_cost && (
-                              <span className="text-sm font-medium text-foreground flex items-center gap-0.5">
-                                <DollarSign className="h-3.5 w-3.5" />
-                                {Number(item.estimated_cost).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                              </span>
-                            )}
-                            {getStatusBadge(item.status)}
-                          </div>
-                        </div>
-
-                        {/* Action buttons for pending items */}
-                        {item.status === "pending" && (
-                          <div className="flex items-center gap-2 mt-3">
-                            {canApprove && (
-                              <>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="h-7 text-xs text-emerald-600 border-emerald-300 hover:bg-emerald-50"
-                                  onClick={() => approveItem.mutate(item.id)}
-                                  disabled={approveItem.isPending}
-                                >
-                                  <Check className="h-3 w-3 mr-1" /> Approve
-                                </Button>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="h-7 text-xs text-destructive border-destructive/30 hover:bg-destructive/10"
-                                  onClick={() => setDenialId(item.id)}
-                                >
-                                  <X className="h-3 w-3 mr-1" /> Deny
-                                </Button>
-                              </>
-                            )}
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 text-xs text-muted-foreground"
-                              onClick={() => deleteItem.mutate(item.id)}
-                            >
-                              <Trash2 className="h-3 w-3 mr-1" /> Remove
-                            </Button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Totals footer */}
-            {repairItems.length > 0 && (
-              <div className="border-t border-border px-5 py-3 bg-muted/30 flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">
-                  {approvedItems.length} approved · {pendingItems.length} pending · {deniedItems.length} denied
-                </span>
-                <div className="flex items-center gap-4">
-                  <span className="text-muted-foreground">
-                    Est: <span className="font-medium text-foreground">${totalEstimated.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-                  </span>
-                  <span className="text-muted-foreground">
-                    Approved: <span className="font-medium text-emerald-600">${totalApproved.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-                  </span>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Vehicle Tasks */}
-          <div className="mt-4">
-            <VehicleTaskSection
-              vehicleId={id!}
-              stages={stages.map((s) => ({ id: s.id, name: s.name }))}
-              teamMembers={[]}
-            />
-          </div>
-
-          {/* Notification History */}
-          <NotificationHistory vehicleId={id!} />
-
-          {/* Notes */}
-          {vehicle.notes && (
-            <div className="rounded-xl border border-border bg-card p-5 mt-4">
-              <h3 className="font-semibold text-foreground mb-2">Intake Notes</h3>
-              <p className="text-sm text-muted-foreground">{vehicle.notes}</p>
-            </div>
-          )}
         </div>
       </div>
-
-      {/* Denial Reason Dialog */}
-      <Dialog open={!!denialId} onOpenChange={(o) => { if (!o) { setDenialId(null); setDenialReason(""); } }}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Deny Work Item</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-1.5">
-              <Label>Reason (optional)</Label>
-              <Textarea value={denialReason} onChange={(e) => setDenialReason(e.target.value)} placeholder="Why is this being denied?" rows={3} />
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => { setDenialId(null); setDenialReason(""); }}>Cancel</Button>
-              <Button
-                variant="destructive"
-                onClick={() => denialId && denyItem.mutate({ itemId: denialId, reason: denialReason })}
-                disabled={denyItem.isPending}
-              >
-                Deny Item
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </AppLayout>
-  );
+  )
 }
