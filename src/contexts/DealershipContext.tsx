@@ -1,63 +1,62 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "./AuthContext";
-import type { Database } from "@/integrations/supabase/types";
+import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
+import { supabase } from '@/integrations/supabase/client'
+import { useAuth } from './AuthContext'
 
-type Dealership = Database["public"]["Tables"]["dealerships"]["Row"];
-
-interface DealershipContextType {
-  dealerships: Dealership[];
-  currentDealership: Dealership | null;
-  setCurrentDealership: (d: Dealership) => void;
-  loading: boolean;
+export interface Dealership {
+  id: string
+  name: string
+  code: string
+  timezone: string
 }
 
-const DealershipContext = createContext<DealershipContextType | undefined>(undefined);
+export interface WorkflowStage {
+  id: string
+  dealership_id: string
+  name: string
+  display_order: number
+  color: string
+  sla_hours: number
+  is_active: boolean
+  requires_approval: boolean
+}
+
+interface DealershipContextType {
+  dealership: Dealership | null
+  stages: WorkflowStage[]
+  loading: boolean
+  refetchStages: () => void
+}
+
+const DealershipContext = createContext<DealershipContextType | undefined>(undefined)
 
 export function DealershipProvider({ children }: { children: ReactNode }) {
-  const { user, profile, isPlatformAdmin } = useAuth();
-  const [dealerships, setDealerships] = useState<Dealership[]>([]);
-  const [currentDealership, setCurrentDealership] = useState<Dealership | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { profile } = useAuth()
+  const [dealership, setDealership] = useState<Dealership | null>(null)
+  const [stages, setStages] = useState<WorkflowStage[]>([])
+  const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    if (!user) {
-      setDealerships([]);
-      setCurrentDealership(null);
-      setLoading(false);
-      return;
-    }
+  async function fetchData() {
+    if (!profile?.dealership_id) { setLoading(false); return }
+    const [dealerRes, stagesRes] = await Promise.all([
+      supabase.from('dealerships').select('*').eq('id', profile.dealership_id).single(),
+      supabase.from('workflow_stages').select('*').eq('dealership_id', profile.dealership_id).eq('is_active', true).order('display_order'),
+    ])
+    if (dealerRes.data) setDealership(dealerRes.data as Dealership)
+    if (stagesRes.data) setStages(stagesRes.data as WorkflowStage[])
+    setLoading(false)
+  }
 
-    const fetchDealerships = async () => {
-      setLoading(true);
-      let query = supabase.from("dealerships").select("*").order("name");
-      
-      // RLS handles filtering — platform admins see all, others see assigned only
-      const { data } = await query;
-      const list = data ?? [];
-      setDealerships(list);
-
-      // Set default
-      if (list.length > 0 && !currentDealership) {
-        const defaultId = profile?.default_dealership_id;
-        const def = defaultId ? list.find((d) => d.id === defaultId) : null;
-        setCurrentDealership(def ?? list[0]);
-      }
-      setLoading(false);
-    };
-
-    fetchDealerships();
-  }, [user, profile, isPlatformAdmin]);
+  useEffect(() => { fetchData() }, [profile?.dealership_id])
 
   return (
-    <DealershipContext.Provider value={{ dealerships, currentDealership, setCurrentDealership, loading }}>
+    <DealershipContext.Provider value={{ dealership, stages, loading, refetchStages: fetchData }}>
       {children}
     </DealershipContext.Provider>
-  );
+  )
 }
 
 export function useDealership() {
-  const ctx = useContext(DealershipContext);
-  if (!ctx) throw new Error("useDealership must be used within DealershipProvider");
-  return ctx;
+  const ctx = useContext(DealershipContext)
+  if (!ctx) throw new Error('useDealership must be used within DealershipProvider')
+  return ctx
 }
