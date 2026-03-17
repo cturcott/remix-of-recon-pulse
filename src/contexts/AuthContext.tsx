@@ -9,10 +9,6 @@ export interface Profile {
   user_id: string
   dealership_id: string | null
   full_name: string | null
-  // aliases for old Lovable components
-  first_name: string | null
-  last_name: string | null
-  title: string | null
   email: string | null
   role: string
   avatar_initials: string | null
@@ -46,15 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       supabase.from('profiles').select('*').eq('user_id', userId).single(),
       supabase.from('user_roles').select('role').eq('user_id', userId),
     ])
-    if (profileRes.data) {
-      const p = profileRes.data as any
-      setProfile({
-        ...p,
-        first_name: p.full_name?.split(' ')[0] || null,
-        last_name: p.full_name?.split(' ').slice(1).join(' ') || null,
-        title: p.role || null,
-      } as Profile)
-    }
+    if (profileRes.data) setProfile(profileRes.data as Profile)
     if (rolesRes.data) setRoles(rolesRes.data.map((r) => r.role as AppRole))
   }
 
