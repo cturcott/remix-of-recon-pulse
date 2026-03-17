@@ -1,2 +1,1 @@
-export default function AppLayout() { return null; }
-export {};
+export { default } from '@/components/layout/AppLayout';

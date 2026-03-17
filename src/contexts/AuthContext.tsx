@@ -2,13 +2,16 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { Session, User } from '@supabase/supabase-js'
 import { supabase } from '@/integrations/supabase/client'
 
-type AppRole = 'platform_admin' | 'admin' | 'manager' | 'technician' | 'advisor'
+export type AppRole = 'platform_admin' | 'admin' | 'manager' | 'technician' | 'advisor' | 'dealership_admin' | 'recon_manager'
 
 export interface Profile {
   id: string
   user_id: string
   dealership_id: string | null
   full_name: string | null
+  first_name: string | null
+  last_name: string | null
+  title: string | null
   email: string | null
   role: string
   avatar_initials: string | null
@@ -42,39 +45,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       supabase.from('profiles').select('*').eq('user_id', userId).single(),
       supabase.from('user_roles').select('role').eq('user_id', userId),
     ])
-    if (profileRes.data) setProfile(profileRes.data as Profile)
-    if (rolesRes.data) setRoles(rolesRes.data.map((r) => r.role as AppRole))
+    if (profileRes.data) {
+      const p = profileRes.data as any
+      setProfile({ ...p, first_name: p.full_name?.split(' ')[0] || null, last_name: p.full_name?.split(' ').slice(1).join(' ') || null, title: p.role || null } as Profile)
+    }
+    if (rolesRes.data) setRoles(rolesRes.data.map((r: any) => r.role as AppRole))
   }
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        setSession(session)
-        setUser(session?.user ?? null)
-        if (session?.user) {
-          setTimeout(() => fetchUserData(session.user.id), 0)
-        } else {
-          setProfile(null)
-          setRoles([])
-        }
-        setLoading(false)
-      }
-    )
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      setSession(session); setUser(session?.user ?? null)
+      if (session?.user) { setTimeout(() => fetchUserData(session.user.id), 0) }
+      else { setProfile(null); setRoles([]) }
+      setLoading(false)
+    })
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session)
-      setUser(session?.user ?? null)
+      setSession(session); setUser(session?.user ?? null)
       if (session?.user) fetchUserData(session.user.id)
       setLoading(false)
     })
     return () => subscription.unsubscribe()
   }, [])
 
-  const signOut = async () => {
-    await supabase.auth.signOut()
-    setProfile(null)
-    setRoles([])
-  }
-
+  const signOut = async () => { await supabase.auth.signOut(); setProfile(null); setRoles([]) }
   const isPlatformAdmin = roles.includes('platform_admin')
 
   return (
